@@ -1,0 +1,4 @@
+.searchPage { padding: 40px 0 80px; }
+.searchPage h1 { font-family: var(--font-heading); font-size: 2rem; font-weight: 400; margin-bottom: 8px; }
+.queryInfo { color: var(--text-secondary); font-size: 14px; margin-bottom: 32px; }
+.noResults { text-align: center; padding: 80px 24px; color: var(--text-secondary); }

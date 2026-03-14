@@ -1,0 +1,30 @@
+.promoBanner {
+  background-color: var(--primary-green);
+  color: var(--luxury-gold);
+  height: var(--promo-height);
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  position: relative;
+  z-index: 1001;
+}
+
+.scrollContainer {
+  width: 100%;
+  overflow: hidden;
+}
+
+.scrollContent {
+  display: flex;
+  gap: 60px;
+  white-space: nowrap;
+  animation: scroll 25s linear infinite;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+.scrollContent span {
+  flex-shrink: 0;
+}
