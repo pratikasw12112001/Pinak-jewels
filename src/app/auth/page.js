@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import styles from './page.module.css';
 
@@ -17,10 +18,10 @@ export default function AuthPage() {
     return (
       <div className={styles.authPage}>
         <div className={styles.card}>
-          <img src="/logo-pinak.png" alt="Pinak Jewels" className={styles.logo} />
           <h2>Welcome, {user?.name}!</h2>
           <p className={styles.email}>{user?.email}</p>
-          <button className="btn btn-primary" style={{width:'100%',marginTop:'20px'}} onClick={logout}>Sign Out</button>
+          <Link href="/orders" className="btn btn-outline" style={{width:'100%',marginTop:'20px'}}>My Orders</Link>
+          <button className="btn btn-primary" style={{width:'100%',marginTop:'10px'}} onClick={logout}>Sign Out</button>
         </div>
       </div>
     );
@@ -42,10 +43,19 @@ export default function AuthPage() {
     }
   };
 
+  const handleGoogleLogin = () => {
+    // Simulated Google SSO — in production, replace with real Google OAuth
+    const googleName = prompt('Enter your Google name:');
+    if (!googleName) return;
+    const googleEmail = prompt('Enter your Google email:');
+    if (!googleEmail) return;
+    login({ name: googleName, email: googleEmail, provider: 'google' });
+    router.push('/');
+  };
+
   return (
     <div className={styles.authPage}>
       <div className={styles.card}>
-        <img src="/logo-pinak.png" alt="Pinak Jewels" className={styles.logo} />
         <h2>{isLogin ? 'Welcome Back' : 'Create Account'}</h2>
         <p className={styles.subtitle}>{isLogin ? 'Sign in to your account' : 'Join the Pinak Jewels family'}</p>
 

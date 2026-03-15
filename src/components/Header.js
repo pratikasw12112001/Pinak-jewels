@@ -24,7 +24,9 @@ export default function Header() {
   const [searchResults, setSearchResults] = useState([]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const searchRef = useRef(null);
+  const userMenuRef = useRef(null);
   const router = useRouter();
   const { cartCount } = useCart();
   const { wishlistCount } = useWishlist();
@@ -41,6 +43,9 @@ export default function Header() {
       if (searchRef.current && !searchRef.current.contains(e.target)) {
         setSearchOpen(false);
         setSearchResults([]);
+      }
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target)) {
+        setUserDropdownOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -78,7 +83,7 @@ export default function Header() {
 
         {/* Logo */}
         <Link href="/" className={styles.logo}>
-          <img src="/logo-pinak.png" alt="Pinak Jewels" />
+          <img src="/logo-pinak-transparent.png" alt="Pinak Jewels" />
         </Link>
 
         {/* Navigation */}
@@ -163,16 +168,19 @@ export default function Header() {
 
           {/* User */}
           {isLoggedIn ? (
-            <div className={styles.userMenu}>
-              <button className={styles.iconBtn} aria-label="Account">
+            <div className={styles.userMenu} ref={userMenuRef}>
+              <button className={styles.iconBtn} aria-label="Account" onClick={() => setUserDropdownOpen(!userDropdownOpen)}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
                 </svg>
               </button>
-              <div className={styles.userDropdown}>
-                <div className={styles.userGreeting}>Hi, {user?.name || 'User'}!</div>
-                <button onClick={logout} className={styles.logoutBtn}>Sign Out</button>
-              </div>
+              {userDropdownOpen && (
+                <div className={styles.userDropdown}>
+                  <div className={styles.userGreeting}>Hi, {user?.name || 'User'}!</div>
+                  <Link href="/orders" className={styles.dropdownLink} onClick={() => setUserDropdownOpen(false)}>My Orders</Link>
+                  <button onClick={() => { logout(); setUserDropdownOpen(false); }} className={styles.logoutBtn}>Sign Out</button>
+                </div>
+              )}
             </div>
           ) : (
             <Link href="/auth" className={styles.iconBtn} aria-label="Login">

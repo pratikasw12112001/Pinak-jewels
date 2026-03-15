@@ -1,5 +1,5 @@
 .wishlistPage { padding: 40px 0 80px; }
-.title { font-family: var(--font-heading); font-size: 2rem; font-weight: 400; margin-bottom: 4px; }
+.title { font-family: var(--font-heading); font-size: 2rem; font-weight: 400; margin-bottom: 4px; color: var(--primary-green); }
 .count { color: var(--text-secondary); font-size: 14px; margin-bottom: 32px; }
 .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
 .card { border: 1px solid var(--border-color); border-radius: var(--radius-lg); overflow: hidden; transition: all var(--transition-base); }
@@ -18,4 +18,4 @@
 .empty h2 { margin-bottom: 8px; }
 .empty p { color: var(--text-secondary); margin-bottom: 24px; }
 @media (max-width: 900px) { .grid { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 480px) { .grid { grid-template-columns: 1fr; } }
+@media (max-width: 480px) { .grid { grid-template-columns: repeat(2, 1fr); gap: 12px; } }

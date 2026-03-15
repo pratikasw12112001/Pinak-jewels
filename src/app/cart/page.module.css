@@ -1,5 +1,5 @@
 .cartPage { padding: 40px 0 80px; }
-.title { font-family: var(--font-heading); font-size: 2rem; font-weight: 400; margin-bottom: 32px; }
+.title { font-family: var(--font-heading); font-size: 2rem; font-weight: 400; margin-bottom: 32px; color: var(--primary-green); }
 .layout { display: grid; grid-template-columns: 1fr 380px; gap: 40px; align-items: start; }
 .items { display: flex; flex-direction: column; gap: 16px; }
 .cartItem { display: flex; align-items: center; gap: 20px; padding: 20px; border: 1px solid var(--border-color); border-radius: var(--radius-md); transition: border-color var(--transition-fast); }
@@ -22,7 +22,7 @@
 .summary h3 { font-family: var(--font-heading); font-size: 18px; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border-color); }
 .summaryRow { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 12px; color: var(--text-secondary); }
 .summaryRow span:last-child { font-weight: 600; color: var(--text-primary); }
-.freeShipNote { font-size: 12px; color: var(--luxury-gold); background: rgba(230,195,106,0.1); padding: 8px 12px; border-radius: var(--radius-sm); margin-bottom: 12px; text-align: center; }
+.freeShipNote { font-size: 12px; color: var(--primary-green); background: rgba(15,79,58,0.08); padding: 8px 12px; border-radius: var(--radius-sm); margin-bottom: 12px; text-align: center; font-weight: 500; }
 .totalRow { font-size: 18px; font-weight: 700; padding-top: 16px; border-top: 1px solid var(--border-color); margin-top: 8px; margin-bottom: 24px; }
 .totalRow span { color: var(--text-primary) !important; }
 .continueShopping { display: block; text-align: center; margin-top: 16px; font-size: 13px; color: var(--text-secondary); }

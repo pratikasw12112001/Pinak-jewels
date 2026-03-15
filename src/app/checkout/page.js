@@ -3,12 +3,16 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
+import { useOrders } from '@/context/OrderContext';
+import { db } from '@/lib/firebase';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import Link from 'next/link';
 import styles from './page.module.css';
 
 export default function CheckoutPage() {
   const { cartItems, cartTotal, clearCart } = useCart();
   const { isLoggedIn, user } = useAuth();
+  const { addOrder } = useOrders();
   const router = useRouter();
   const shipping = cartTotal >= 2499 ? 0 : 99;
   const total = cartTotal + shipping;
@@ -86,10 +90,96 @@ export default function CheckoutPage() {
             });
             const verifyData = await verifyRes.json();
             if (verifyData.success) {
+              // Save to Firebase Firestore
+              try {
+                await addDoc(collection(db, 'orders'), {
+                  name: form.fullName,
+                  email: form.email,
+                  phone: form.phone,
+                  address: `${form.address1}${form.address2 ? ', ' + form.address2 : ''}, ${form.city}, ${form.state} — ${form.pinCode}`,
+                  product: cartItems.map(item => `${item.name} (x${item.quantity})`).join(', '),
+                  price: total,
+                  status: 'Confirmed',
+                  paymentId: response.razorpay_payment_id,
+                  orderId: verifyData.orderId || response.razorpay_order_id,
+                  timestamp: serverTimestamp(),
+                });
+              } catch (firebaseErr) {
+                console.error('Firebase save error:', firebaseErr);
+              }
+              // Send admin email notification
+              const orderAddress = `${form.address1}${form.address2 ? ', ' + form.address2 : ''}, ${form.city}, ${form.state} — ${form.pinCode}`;
+              fetch('/api/send-order-email', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  name: form.fullName,
+                  email: form.email,
+                  phone: form.phone,
+                  address: orderAddress,
+                  product: cartItems.map(item => `${item.name} (x${item.quantity})`).join(', '),
+                  price: total,
+                  paymentId: response.razorpay_payment_id,
+                  orderId: verifyData.orderId || response.razorpay_order_id,
+                }),
+              }).catch(err => console.error('Email send error:', err));
+              addOrder({
+                orderId: verifyData.orderId || response.razorpay_order_id,
+                items: cartItems,
+                total,
+                subtotal: cartTotal,
+                shipping,
+                customer: form,
+                paymentMode: 'Online (Razorpay)',
+                paymentId: response.razorpay_payment_id,
+              });
               clearCart();
               router.push(`/order-confirmation/${verifyData.orderId || response.razorpay_order_id}`);
             }
           } catch (e) {
+            // Fallback: still save to Firebase Firestore
+            try {
+              await addDoc(collection(db, 'orders'), {
+                name: form.fullName,
+                email: form.email,
+                phone: form.phone,
+                address: `${form.address1}${form.address2 ? ', ' + form.address2 : ''}, ${form.city}, ${form.state} — ${form.pinCode}`,
+                product: cartItems.map(item => `${item.name} (x${item.quantity})`).join(', '),
+                price: total,
+                status: 'Confirmed',
+                paymentId: response.razorpay_payment_id,
+                orderId: response.razorpay_order_id,
+                timestamp: serverTimestamp(),
+              });
+            } catch (firebaseErr) {
+              console.error('Firebase save error:', firebaseErr);
+            }
+            // Send admin email notification (fallback)
+            const orderAddress = `${form.address1}${form.address2 ? ', ' + form.address2 : ''}, ${form.city}, ${form.state} — ${form.pinCode}`;
+            fetch('/api/send-order-email', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                name: form.fullName,
+                email: form.email,
+                phone: form.phone,
+                address: orderAddress,
+                product: cartItems.map(item => `${item.name} (x${item.quantity})`).join(', '),
+                price: total,
+                paymentId: response.razorpay_payment_id,
+                orderId: response.razorpay_order_id,
+              }),
+            }).catch(err => console.error('Email send error:', err));
+            addOrder({
+              orderId: response.razorpay_order_id,
+              items: cartItems,
+              total,
+              subtotal: cartTotal,
+              shipping,
+              customer: form,
+              paymentMode: 'Online (Razorpay)',
+              paymentId: response.razorpay_payment_id,
+            });
             clearCart();
             router.push(`/order-confirmation/${response.razorpay_order_id}`);
           }

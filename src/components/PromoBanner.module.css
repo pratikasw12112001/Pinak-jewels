@@ -4,12 +4,25 @@
   height: var(--promo-height);
   display: flex;
   align-items: center;
+  justify-content: center;
   overflow: hidden;
   position: relative;
   z-index: 1001;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
-.scrollContainer {
+/* Mobile: single message, centered */
+.mobileOnly {
+  display: none;
+  text-align: center;
+}
+
+/* Desktop: scrolling marquee */
+.desktopOnly {
   width: 100%;
   overflow: hidden;
 }
@@ -19,12 +32,27 @@
   gap: 60px;
   white-space: nowrap;
   animation: scroll 25s linear infinite;
-  font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
 }
 
 .scrollContent span {
   flex-shrink: 0;
+}
+
+@keyframes scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* Mobile breakpoint */
+@media (max-width: 768px) {
+  .mobileOnly {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .desktopOnly {
+    display: none;
+  }
 }

@@ -1,11 +1,21 @@
 'use client';
 import Link from 'next/link';
 import { useWishlist } from '@/context/WishlistContext';
+import { useToast } from '@/components/Toast';
 import styles from './ProductCard.module.css';
 
 export default function ProductCard({ product }) {
   const { toggleWishlist, isInWishlist } = useWishlist();
+  const { showToast } = useToast();
   const wishlisted = isInWishlist(product.id);
+
+  const handleWishlistClick = (e) => {
+    e.preventDefault();
+    toggleWishlist(product);
+    if (!wishlisted) {
+      showToast(`"${product.name}" added to wishlist`, 'View Wishlist', '/wishlist');
+    }
+  };
 
   return (
     <div className={styles.card}>
@@ -21,7 +31,7 @@ export default function ProductCard({ product }) {
 
       <button
         className={`${styles.wishlistBtn} ${wishlisted ? styles.active : ''}`}
-        onClick={(e) => { e.preventDefault(); toggleWishlist(product); }}
+        onClick={handleWishlistClick}
         aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
       >
         <svg width="18" height="18" viewBox="0 0 24 24"

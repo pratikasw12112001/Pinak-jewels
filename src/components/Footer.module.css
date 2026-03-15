@@ -15,10 +15,10 @@
 }
 
 .footerLogo {
-  height: 50px;
+  height: 112px;
   width: auto;
   margin-bottom: 16px;
-  filter: brightness(1.2);
+  border-radius: 10px;
 }
 
 .brandDesc {

@@ -1,6 +1,6 @@
 .contactPage { padding: 40px 0 80px; }
 .header { text-align: center; margin-bottom: 48px; }
-.header h1 { font-family: var(--font-heading); font-size: 2rem; font-weight: 400; margin-bottom: 8px; }
+.header h1 { font-family: var(--font-heading); font-size: 2rem; font-weight: 400; margin-bottom: 8px; color: var(--primary-green); }
 .header p { color: var(--text-secondary); font-size: 15px; max-width: 500px; margin: 0 auto; }
 .layout { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; }
 .infoSection { display: flex; flex-direction: column; gap: 20px; }

@@ -1,7 +1,7 @@
 .checkoutPage { padding: 40px 0 80px; }
-.title { font-family: var(--font-heading); font-size: 2rem; font-weight: 400; margin-bottom: 32px; }
+.title { font-family: var(--font-heading); font-size: 2rem; font-weight: 400; margin-bottom: 32px; color: var(--primary-green); }
 .layout { display: grid; grid-template-columns: 1fr 360px; gap: 40px; align-items: start; }
-.formSection { }
+.formSection { min-width: 0; }
 .steps { display: flex; align-items: center; gap: 12px; margin-bottom: 32px; }
 .stepItem { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-secondary); font-weight: 500; }
 .stepItem span { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--border-color); display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 12px; }
@@ -37,5 +37,5 @@
 .empty { text-align: center; padding: 120px 24px; }
 .empty h2 { margin-bottom: 8px; }
 .empty p { color: var(--text-secondary); margin-bottom: 24px; }
-@media (max-width: 900px) { .layout { grid-template-columns: 1fr; } .summary { position: static; } }
+@media (max-width: 900px) { .layout { grid-template-columns: 1fr; } .summary { position: static; order: 2; } .formSection { order: 1; } .steps { order: 0; } }
 @media (max-width: 480px) { .grid3 { grid-template-columns: 1fr; } .btnGroup { flex-direction: column; } }

@@ -2,15 +2,18 @@
 import Link from 'next/link';
 import { useWishlist } from '@/context/WishlistContext';
 import { useCart } from '@/context/CartContext';
+import { useToast } from '@/components/Toast';
 import styles from './page.module.css';
 
 export default function WishlistPage() {
   const { wishlistItems, removeFromWishlist } = useWishlist();
   const { addToCart } = useCart();
+  const { showToast } = useToast();
 
   const handleMoveToCart = (item) => {
     addToCart(item);
     removeFromWishlist(item.id);
+    showToast(`"${item.name}" moved to cart`, 'View Cart', '/cart');
   };
 
   if (wishlistItems.length === 0) {

@@ -2,6 +2,8 @@ import './globals.css';
 import { CartProvider } from '@/context/CartContext';
 import { WishlistProvider } from '@/context/WishlistContext';
 import { AuthProvider } from '@/context/AuthContext';
+import { OrderProvider } from '@/context/OrderContext';
+import { ToastProvider } from '@/components/Toast';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import PromoBanner from '@/components/PromoBanner';
@@ -22,12 +24,16 @@ export default function RootLayout({ children }) {
         <AuthProvider>
           <CartProvider>
             <WishlistProvider>
-              <PromoBanner />
-              <Header />
-              <main style={{ minHeight: 'calc(100vh - 300px)' }}>
-                {children}
-              </main>
-              <Footer />
+              <OrderProvider>
+                <ToastProvider>
+                  <PromoBanner />
+                  <Header />
+                  <main style={{ minHeight: 'calc(100vh - 300px)' }}>
+                    {children}
+                  </main>
+                  <Footer />
+                </ToastProvider>
+              </OrderProvider>
             </WishlistProvider>
           </CartProvider>
         </AuthProvider>

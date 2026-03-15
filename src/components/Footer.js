@@ -11,7 +11,7 @@ export default function Footer() {
             {/* Brand */}
             <div className={styles.footerBrand}>
               <Link href="/">
-                <img src="/logo-pinak.png" alt="Pinak Jewels" className={styles.footerLogo} />
+                <img src="/logo-pinak-transparent.png" alt="Pinak Jewels" className={styles.footerLogo} />
               </Link>
               <p className={styles.brandDesc}>
                 Modern jewellery crafted with love. Discover anti-tarnish, waterproof pieces that perfectly blend contemporary design with timeless elegance.
@@ -41,6 +41,7 @@ export default function Footer() {
             <div className={styles.footerCol}>
               <h4>Help</h4>
               <Link href="/contact">Contact Us</Link>
+              <Link href="/orders">My Orders</Link>
               <Link href="/cart">Shopping Cart</Link>
               <Link href="/wishlist">Wishlist</Link>
               <Link href="/auth">My Account</Link>

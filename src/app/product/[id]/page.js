@@ -4,6 +4,7 @@ import Link from 'next/link';
 import ProductCard from '@/components/ProductCard';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
+import { useToast } from '@/components/Toast';
 import { getProductBySlug, getProductsByCategory } from '@/data/products';
 import { useState } from 'react';
 import styles from './page.module.css';
@@ -13,7 +14,7 @@ export default function ProductDetailPage() {
   const product = getProductBySlug(params.id);
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
-  const [added, setAdded] = useState(false);
+  const { showToast } = useToast();
   const [quantity, setQuantity] = useState(1);
 
   if (!product) {
@@ -26,8 +27,15 @@ export default function ProductDetailPage() {
 
   const handleAddToCart = () => {
     addToCart(product, quantity);
-    setAdded(true);
-    setTimeout(() => setAdded(false), 2000);
+    showToast(`"${product.name}" added to cart`, 'View Cart', '/cart');
+  };
+
+  const handleWishlistToggle = () => {
+    const wasWishlisted = isInWishlist(product.id);
+    toggleWishlist(product);
+    if (!wasWishlisted) {
+      showToast(`"${product.name}" added to wishlist`, 'View Wishlist', '/wishlist');
+    }
   };
 
   const wishlisted = isInWishlist(product.id);
@@ -92,11 +100,11 @@ export default function ProductDetailPage() {
                 <button onClick={() => setQuantity(quantity + 1)}>+</button>
               </div>
               <button className={`btn btn-primary ${styles.addToCartBtn}`} onClick={handleAddToCart}>
-                {added ? '✓ Added!' : 'Add to Cart'}
+                Add to Cart
               </button>
               <button
                 className={`${styles.wishBtn} ${wishlisted ? styles.wishlisted : ''}`}
-                onClick={() => toggleWishlist(product)}
+                onClick={handleWishlistToggle}
               >
                 <svg width="22" height="22" viewBox="0 0 24 24" fill={wishlisted ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2">
                   <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
@@ -120,8 +128,6 @@ export default function ProductDetailPage() {
           </section>
         )}
       </div>
-
-      {added && <div className="toast">Added to cart! 🛍️</div>}
     </div>
   );
 }

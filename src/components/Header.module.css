@@ -25,12 +25,17 @@
 /* Logo */
 .logo {
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
 }
 
+.logo:hover { opacity: 0.9; }
+
 .logo img {
-  height: 50px;
+  height: 78px;
   width: auto;
   object-fit: contain;
+  border-radius: 10px;
 }
 
 /* Navigation */
@@ -199,7 +204,6 @@
 }
 
 .userDropdown {
-  display: none;
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
@@ -210,10 +214,6 @@
   padding: 12px 16px;
   min-width: 160px;
   z-index: 100;
-}
-
-.userMenu:hover .userDropdown {
-  display: block;
   animation: fadeIn 0.2s ease;
 }
 
@@ -236,6 +236,20 @@
 }
 
 .logoutBtn:hover {
+  color: var(--primary-green);
+}
+
+.dropdownLink {
+  display: block;
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 500;
+  padding: 4px 0;
+  margin-bottom: 8px;
+  text-decoration: none;
+}
+
+.dropdownLink:hover {
   color: var(--primary-green);
 }
 
@@ -331,7 +345,7 @@
 
 @media (max-width: 480px) {
   .logo img {
-    height: 40px;
+    height: 63px;
   }
 
   .icons {

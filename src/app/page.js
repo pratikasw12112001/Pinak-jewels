@@ -1,5 +1,6 @@
 'use client';
 import Link from 'next/link';
+import { useRef } from 'react';
 import ProductCard from '@/components/ProductCard';
 import { categories, getBestsellers, getNewArrivals } from '@/data/products';
 import styles from './page.module.css';
@@ -7,6 +8,13 @@ import styles from './page.module.css';
 export default function HomePage() {
   const bestsellers = getBestsellers();
   const newArrivals = getNewArrivals();
+  const catScrollRef = useRef(null);
+
+  const scrollCats = (dir) => {
+    if (catScrollRef.current) {
+      catScrollRef.current.scrollBy({ left: dir * 220, behavior: 'smooth' });
+    }
+  };
 
   return (
     <>
@@ -19,7 +27,7 @@ export default function HomePage() {
           <p className={styles.heroSubtitle}>
             Discover anti-tarnish, waterproof jewellery that blends contemporary design with timeless elegance.
           </p>
-          <Link href="/category/pendants" className="btn btn-secondary">
+          <Link href="/products" className="btn btn-secondary">
             Shop Now
           </Link>
         </div>
@@ -32,21 +40,30 @@ export default function HomePage() {
             <h2>Shop by Category</h2>
             <p>Explore our curated collections</p>
           </div>
-          <div className={styles.categoryGrid}>
-            {categories.map((cat) => (
-              <Link href={`/category/${cat.slug}`} key={cat.slug} className={styles.categoryCard}>
-                <div className={styles.categoryImageWrapper}>
-                  <img src={cat.image} alt={cat.name} className={styles.categoryImage} loading="lazy" />
-                </div>
-                <div className={styles.categoryInfo}>
-                  <h3>{cat.name}</h3>
-                  <span className={styles.categoryLink}>Explore →</span>
-                </div>
-              </Link>
-            ))}
+          <div className={styles.categoryScrollWrapper}>
+            <button className={`${styles.catArrow} ${styles.catArrowLeft}`} onClick={() => scrollCats(-1)} aria-label="Scroll left">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
+            <div className={styles.categoryStrip} ref={catScrollRef}>
+              {categories.map((cat) => (
+                <Link href={`/category/${cat.slug}`} key={cat.slug} className={styles.categoryCard}>
+                  <div className={styles.categoryImageWrapper}>
+                    <img src={cat.image} alt={cat.name} className={styles.categoryImage} loading="lazy" />
+                    <span className={styles.categoryName}>{cat.name}</span>
+                  </div>
+                  <div className={styles.categoryFooter}>
+                    <span className={styles.categoryExploreBtn}>Explore →</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+            <button className={`${styles.catArrow} ${styles.catArrowRight}`} onClick={() => scrollCats(1)} aria-label="Scroll right">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
           </div>
         </div>
       </section>
+
 
       {/* Bestsellers */}
       <section className="section section-ivory">
