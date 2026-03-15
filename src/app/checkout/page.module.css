@@ -15,7 +15,8 @@
 .grid2 { display: grid; grid-template-columns: 1fr; gap: 16px; }
 .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
 .btnGroup { display: flex; gap: 12px; margin-top: 8px; }
-.codNotice { display: flex; align-items: center; gap: 10px; background: #fef3c7; color: #92400e; padding: 14px 16px; border-radius: var(--radius-md); font-size: 14px; margin-bottom: 16px; }
+.btnGroupCol { display: flex; flex-direction: column; gap: 12px; margin-top: 8px; }
+.codNotice { display: flex; align-items: center; gap: 10px; opacity: 0.6; font-size: 13px; margin-bottom: 12px; }
 .paymentInfo { font-size: 14px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 20px; }
 .summary { background: var(--ivory); padding: 24px; border-radius: var(--radius-lg); position: sticky; top: calc(var(--header-height) + 24px); }
 .summary h3 { font-family: var(--font-heading); font-size: 16px; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border-color); }

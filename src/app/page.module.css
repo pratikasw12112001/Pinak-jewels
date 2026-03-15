@@ -76,6 +76,36 @@
   gap: 0;
 }
 
+/* Mobile Scroll Indicator Overlay */
+.mobileScrollIndicator {
+  display: none;
+}
+@media (max-width: 768px) {
+  .mobileScrollIndicator {
+    display: flex;
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 60px;
+    background: linear-gradient(to right, transparent, var(--white));
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 8px;
+    z-index: 5;
+    pointer-events: none;
+    color: var(--primary-green);
+    opacity: 0.8;
+    animation: pulse 2s infinite;
+  }
+}
+
+@keyframes pulse {
+  0% { transform: translateX(0); opacity: 0.8; }
+  50% { transform: translateX(4px); opacity: 1; }
+  100% { transform: translateX(0); opacity: 0.8; }
+}
+
 .catArrow {
   flex-shrink: 0;
   width: 40px;
@@ -200,6 +230,10 @@
 }
 
 /* Bestsellers */
+.bestsellersWrapper {
+  position: relative;
+}
+
 .bestsellersScroll {
   display: flex;
   gap: 20px;

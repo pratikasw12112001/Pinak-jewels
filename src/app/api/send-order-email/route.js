@@ -1,27 +1,24 @@
 import { NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
 
+export const dynamic = 'force-dynamic';
+
 function getDeliveryDate() {
   const now = new Date();
   let workingDays = 0;
   const minDate = new Date(now);
-  while (workingDays < 8) {
+  while (workingDays < 9) {
     minDate.setDate(minDate.getDate() + 1);
     if (minDate.getDay() !== 0) workingDays++;
   }
   const maxDate = new Date(minDate);
-  workingDays = 0;
-  while (workingDays < 1) {
-    maxDate.setDate(maxDate.getDate() + 1);
-    if (maxDate.getDay() !== 0) workingDays++;
-  }
   const fmt = (d) => d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
   return `${fmt(minDate)} — ${fmt(maxDate)}`;
 }
 
 export async function POST(request) {
   try {
-    const { name, email, phone, address, product, price, paymentId, orderId } = await request.json();
+    const { name, email, phone, address, product, price, paymentId, orderId, items } = await request.json();
 
     const transporter = nodemailer.createTransport({
       service: 'gmail',
@@ -61,9 +58,32 @@ export async function POST(request) {
             <tr><td style="padding: 8px 0; color: #6b7280;">Address</td><td style="padding: 8px 0;">${address}</td></tr>
           </table>
           <h3 style="margin: 24px 0 12px; color: #0F4F3A; font-size: 15px; text-transform: uppercase; letter-spacing: 1px;">Order Details</h3>
-          <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
-            <tr><td style="padding: 8px 0; color: #6b7280; width: 140px;">Product(s)</td><td style="padding: 8px 0;">${product}</td></tr>
-            <tr style="background: #f0fdf4;"><td style="padding: 12px 8px; color: #0F4F3A; font-weight: 600; font-size: 16px;">Total Amount</td><td style="padding: 12px 8px; color: #0F4F3A; font-weight: 700; font-size: 18px;">${formattedPrice}</td></tr>
+          <table style="width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 20px;">
+            <thead>
+              <tr style="border-bottom: 2px solid #e5e7eb; color: #6b7280; font-size: 12px; text-transform: uppercase;">
+                <th style="padding: 10px 8px; text-align: left;">Item</th>
+                <th style="padding: 10px 8px; text-align: center;">Qty</th>
+                <th style="padding: 10px 8px; text-align: right;">Price</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${items && items.length > 0 ? items.map(item => `
+                <tr style="border-bottom: 1px solid #f3f4f6;">
+                  <td style="padding: 12px 8px; display: flex; align-items: center; gap: 12px;">
+                    <img src="https://pinakjewels.netlify.app${item.image}" alt="${item.name}" style="width: 48px; height: 48px; border-radius: 6px; object-fit: cover; border: 1px solid #e5e7eb;" />
+                    <span style="font-weight: 500;">${item.name}</span>
+                  </td>
+                  <td style="padding: 12px 8px; text-align: center;">${item.quantity}</td>
+                  <td style="padding: 12px 8px; text-align: right;">₹${item.price.toLocaleString('en-IN')}</td>
+                </tr>
+              `).join('') : `
+                <tr><td colspan="3" style="padding: 12px 8px;">${product}</td></tr>
+              `}
+              <tr style="background: #f0fdf4;">
+                <td colspan="2" style="padding: 16px 8px; color: #0F4F3A; font-weight: 600; font-size: 16px; text-align: right;">Total Amount</td>
+                <td style="padding: 16px 8px; color: #0F4F3A; font-weight: 700; font-size: 18px; text-align: right;">${formattedPrice}</td>
+              </tr>
+            </tbody>
           </table>
         </div>
         <div style="background: #f9fafb; padding: 16px 32px; text-align: center; font-size: 12px; color: #9ca3af;">
@@ -111,7 +131,7 @@ export async function POST(request) {
           <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 16px 20px; margin-bottom: 20px; text-align: center;">
             <p style="margin: 0; font-size: 14px; color: #0F4F3A;">
               🚚 <strong>Estimated Delivery:</strong> ${deliveryDate}<br>
-              <span style="font-size: 13px; color: #6b7280;">(8-9 working days)</span>
+              <span style="font-size: 13px; color: #6b7280;">(9 working days)</span>
             </p>
           </div>
 

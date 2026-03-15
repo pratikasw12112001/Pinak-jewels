@@ -8,4 +8,7 @@
 .notFound { text-align: center; padding: 120px 24px; }
 .notFound h1 { font-size: 2rem; margin-bottom: 12px; }
 .notFound p { color: var(--text-secondary); }
-@media (max-width: 480px) { .controls { flex-direction: column; gap: 12px; align-items: stretch; } .sortSelect { min-width: unset; } }
+@media (max-width: 480px) { 
+  .controls { align-items: center; } 
+  .sortSelect { min-width: unset; padding: 8px 10px; font-size: 12px; } 
+}

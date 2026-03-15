@@ -21,7 +21,7 @@ function OrderContent() {
         </div>
 
         <div className={styles.message}>
-          <p>🚚 Your order will be delivered within <strong>8-9 working days</strong>.</p>
+          <p>🚚 Your order will be delivered within <strong>9 working days</strong>.</p>
         </div>
 
         <div className={styles.support}>

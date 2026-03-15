@@ -8,18 +8,12 @@ function getDeliveryDates(orderDateStr) {
   const orderDate = new Date(orderDateStr);
   let workingDays = 0;
   const minDate = new Date(orderDate);
-  while (workingDays < 8) {
+  while (workingDays < 9) {
     minDate.setDate(minDate.getDate() + 1);
     const day = minDate.getDay();
     if (day !== 0) workingDays++; // Skip Sundays
   }
-  const maxDate = new Date(minDate);
-  workingDays = 0;
-  while (workingDays < 1) {
-    maxDate.setDate(maxDate.getDate() + 1);
-    const day = maxDate.getDay();
-    if (day !== 0) workingDays++;
-  }
+  const maxDate = new Date(minDate); // Exact 9 days now
   const fmt = (d) => d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
   return { min: fmt(minDate), max: fmt(maxDate) };
 }
@@ -118,7 +112,7 @@ export default function OrdersPage() {
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
                   </svg>
-                  <span>Estimated delivery by <strong>{delivery.min} — {delivery.max}</strong> (8-9 working days)</span>
+                  <span>Estimated delivery by <strong>{delivery.min} — {delivery.max}</strong> (9 working days)</span>
                 </div>
               </div>
             );
