@@ -15,9 +15,11 @@
 }
 
 .footerLogo {
-  height: 140px;
+  height: 64px;
   width: auto;
   margin-bottom: 16px;
+  filter: brightness(0) invert(1);
+  opacity: 0.92;
 }
 
 .brandDesc {
