@@ -20,6 +20,7 @@ export default function AuthPage() {
   const { isLoggedIn, user, logout, updateName } = useAuth();
   const router = useRouter();
 
+  // Resend countdown
   useEffect(() => {
     if (resendTimer > 0) {
       const t = setTimeout(() => setResendTimer(r => r - 1), 1000);
@@ -27,14 +28,20 @@ export default function AuthPage() {
     }
   }, [resendTimer]);
 
-  const setupRecaptcha = () => {
-    if (!recaptchaVerifier.current) {
-      recaptchaVerifier.current = new RecaptchaVerifier(auth, 'recaptcha-container', {
-        size: 'invisible',
-      });
-    }
-    return recaptchaVerifier.current;
-  };
+  // Initialize RecaptchaVerifier once on mount
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    recaptchaVerifier.current = new RecaptchaVerifier(auth, 'recaptcha-container', {
+      size: 'invisible',
+    });
+    recaptchaVerifier.current.render().catch(() => {});
+    return () => {
+      if (recaptchaVerifier.current) {
+        recaptchaVerifier.current.clear();
+        recaptchaVerifier.current = null;
+      }
+    };
+  }, []);
 
   const sendOTP = async (e) => {
     e.preventDefault();
@@ -45,14 +52,16 @@ export default function AuthPage() {
     }
     setLoading(true);
     try {
-      const appVerifier = setupRecaptcha();
-      const result = await signInWithPhoneNumber(auth, `+91${phone}`, appVerifier);
+      const result = await signInWithPhoneNumber(auth, `+91${phone}`, recaptchaVerifier.current);
       setConfirmationResult(result);
       setStep('otp');
       setResendTimer(30);
     } catch (err) {
-      setError('Failed to send OTP. Please try again.');
-      recaptchaVerifier.current = null;
+      setError(err.message || 'Failed to send OTP. Please try again.');
+      // Reset recaptcha so user can retry
+      recaptchaVerifier.current.clear();
+      recaptchaVerifier.current = new RecaptchaVerifier(auth, 'recaptcha-container', { size: 'invisible' });
+      recaptchaVerifier.current.render().catch(() => {});
     } finally {
       setLoading(false);
     }
@@ -64,13 +73,14 @@ export default function AuthPage() {
     setOtp('');
     setLoading(true);
     try {
-      recaptchaVerifier.current = null;
-      const appVerifier = setupRecaptcha();
-      const result = await signInWithPhoneNumber(auth, `+91${phone}`, appVerifier);
+      recaptchaVerifier.current.clear();
+      recaptchaVerifier.current = new RecaptchaVerifier(auth, 'recaptcha-container', { size: 'invisible' });
+      await recaptchaVerifier.current.render();
+      const result = await signInWithPhoneNumber(auth, `+91${phone}`, recaptchaVerifier.current);
       setConfirmationResult(result);
       setResendTimer(30);
     } catch (err) {
-      setError('Failed to resend OTP. Please try again.');
+      setError(err.message || 'Failed to resend OTP. Please try again.');
     } finally {
       setLoading(false);
     }
