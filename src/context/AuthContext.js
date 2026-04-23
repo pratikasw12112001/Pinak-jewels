@@ -1,5 +1,7 @@
 'use client';
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { auth } from '@/lib/firebase';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
 
 const AuthContext = createContext();
 
@@ -8,65 +10,34 @@ export function AuthProvider({ children }) {
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    const saved = localStorage.getItem('pinak-user');
-    if (saved) {
-      try {
-        setUser(JSON.parse(saved));
-      } catch (e) {
-        localStorage.removeItem('pinak-user');
-      }
-    }
-    setIsLoaded(true);
-  }, []);
-
-  useEffect(() => {
-    if (isLoaded) {
-      if (user) {
-        localStorage.setItem('pinak-user', JSON.stringify(user));
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      if (firebaseUser) {
+        const storedName = localStorage.getItem(`pinak-name-${firebaseUser.uid}`) || '';
+        setUser({
+          uid: firebaseUser.uid,
+          phone: firebaseUser.phoneNumber,
+          name: storedName,
+        });
       } else {
-        localStorage.removeItem('pinak-user');
+        setUser(null);
       }
-    }
-  }, [user, isLoaded]);
-
-  const login = useCallback((userData) => {
-    setUser(userData);
+      setIsLoaded(true);
+    });
+    return () => unsubscribe();
   }, []);
 
-  const register = useCallback((userData) => {
-    const users = JSON.parse(localStorage.getItem('pinak-users') || '[]');
-    const exists = users.find(u => u.email === userData.email);
-    if (exists) {
-      throw new Error('An account with this email already exists');
-    }
-    users.push(userData);
-    localStorage.setItem('pinak-users', JSON.stringify(users));
-    setUser({ name: userData.name, email: userData.email });
+  const updateName = useCallback((uid, name) => {
+    localStorage.setItem(`pinak-name-${uid}`, name);
+    setUser(prev => prev ? { ...prev, name } : prev);
   }, []);
 
-  const loginWithCredentials = useCallback((email, password) => {
-    const users = JSON.parse(localStorage.getItem('pinak-users') || '[]');
-    const found = users.find(u => u.email === email && u.password === password);
-    if (!found) {
-      throw new Error('Invalid email or password');
-    }
-    setUser({ name: found.name, email: found.email });
-  }, []);
-
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    await signOut(auth);
     setUser(null);
   }, []);
 
   return (
-    <AuthContext.Provider value={{
-      user,
-      isLoggedIn: !!user,
-      login,
-      register,
-      loginWithCredentials,
-      logout,
-      isLoaded
-    }}>
+    <AuthContext.Provider value={{ user, isLoggedIn: !!user, updateName, logout, isLoaded }}>
       {children}
     </AuthContext.Provider>
   );

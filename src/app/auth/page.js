@@ -1,88 +1,234 @@
 'use client';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { auth } from '@/lib/firebase';
+import { RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
 import { useAuth } from '@/context/AuthContext';
 import styles from './page.module.css';
 
 export default function AuthPage() {
-  const [isLogin, setIsLogin] = useState(true);
+  const [step, setStep] = useState('phone'); // 'phone' | 'otp' | 'name'
+  const [phone, setPhone] = useState('');
+  const [otp, setOtp] = useState('');
   const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const { loginWithCredentials, register, isLoggedIn, user, logout } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [resendTimer, setResendTimer] = useState(0);
+  const [confirmationResult, setConfirmationResult] = useState(null);
+  const recaptchaVerifier = useRef(null);
+  const { isLoggedIn, user, logout, updateName } = useAuth();
   const router = useRouter();
+
+  useEffect(() => {
+    if (resendTimer > 0) {
+      const t = setTimeout(() => setResendTimer(r => r - 1), 1000);
+      return () => clearTimeout(t);
+    }
+  }, [resendTimer]);
+
+  const setupRecaptcha = () => {
+    if (!recaptchaVerifier.current) {
+      recaptchaVerifier.current = new RecaptchaVerifier(auth, 'recaptcha-container', {
+        size: 'invisible',
+      });
+    }
+    return recaptchaVerifier.current;
+  };
+
+  const sendOTP = async (e) => {
+    e.preventDefault();
+    setError('');
+    if (phone.length !== 10) {
+      setError('Please enter a valid 10-digit mobile number');
+      return;
+    }
+    setLoading(true);
+    try {
+      const appVerifier = setupRecaptcha();
+      const result = await signInWithPhoneNumber(auth, `+91${phone}`, appVerifier);
+      setConfirmationResult(result);
+      setStep('otp');
+      setResendTimer(30);
+    } catch (err) {
+      setError('Failed to send OTP. Please try again.');
+      recaptchaVerifier.current = null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resendOTP = async () => {
+    if (resendTimer > 0) return;
+    setError('');
+    setOtp('');
+    setLoading(true);
+    try {
+      recaptchaVerifier.current = null;
+      const appVerifier = setupRecaptcha();
+      const result = await signInWithPhoneNumber(auth, `+91${phone}`, appVerifier);
+      setConfirmationResult(result);
+      setResendTimer(30);
+    } catch (err) {
+      setError('Failed to resend OTP. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const verifyOTP = async (e) => {
+    e.preventDefault();
+    setError('');
+    if (otp.length !== 6) {
+      setError('Please enter the 6-digit OTP');
+      return;
+    }
+    setLoading(true);
+    try {
+      const result = await confirmationResult.confirm(otp);
+      const firebaseUser = result.user;
+      const storedName = localStorage.getItem(`pinak-name-${firebaseUser.uid}`);
+      if (!storedName) {
+        setStep('name');
+      } else {
+        router.push('/');
+      }
+    } catch (err) {
+      setError('Invalid OTP. Please check and try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const saveName = (e) => {
+    e.preventDefault();
+    if (!name.trim()) {
+      setError('Please enter your name');
+      return;
+    }
+    if (auth.currentUser) {
+      updateName(auth.currentUser.uid, name.trim());
+    }
+    router.push('/');
+  };
 
   if (isLoggedIn) {
     return (
       <div className={styles.authPage}>
         <div className={styles.card}>
-          <h2>Welcome, {user?.name}!</h2>
-          <p className={styles.email}>{user?.email}</p>
-          <Link href="/orders" className="btn btn-outline" style={{width:'100%',marginTop:'20px'}}>My Orders</Link>
-          <button className="btn btn-primary" style={{width:'100%',marginTop:'10px'}} onClick={logout}>Sign Out</button>
+          <div className={styles.avatarCircle}>{user?.name ? user.name[0].toUpperCase() : '✦'}</div>
+          <h2>Welcome{user?.name ? `, ${user.name}` : ''}!</h2>
+          <p className={styles.subtitle}>{user?.phone}</p>
+          <Link href="/orders" className="btn btn-outline" style={{ width: '100%', marginTop: '20px' }}>My Orders</Link>
+          <button className="btn btn-primary" style={{ width: '100%', marginTop: '10px' }} onClick={logout}>Sign Out</button>
         </div>
       </div>
     );
   }
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setError('');
-    try {
-      if (isLogin) {
-        loginWithCredentials(email, password);
-      } else {
-        if (!name.trim()) { setError('Please enter your name'); return; }
-        register({ name: name.trim(), email, password });
-      }
-      router.push('/');
-    } catch (err) {
-      setError(err.message);
-    }
-  };
-
-  const handleGoogleLogin = () => {
-    // Simulated Google SSO — in production, replace with real Google OAuth
-    const googleName = prompt('Enter your Google name:');
-    if (!googleName) return;
-    const googleEmail = prompt('Enter your Google email:');
-    if (!googleEmail) return;
-    login({ name: googleName, email: googleEmail, provider: 'google' });
-    router.push('/');
-  };
-
   return (
     <div className={styles.authPage}>
       <div className={styles.card}>
-        <h2>{isLogin ? 'Welcome Back' : 'Create Account'}</h2>
-        <p className={styles.subtitle}>{isLogin ? 'Sign in to your account' : 'Join the Pinak Jewels family'}</p>
 
-        {error && <div className={styles.error}>{error}</div>}
+        {/* Step indicator */}
+        <div className={styles.steps}>
+          <div className={`${styles.step} ${step === 'phone' ? styles.stepActive : styles.stepDone}`}>1</div>
+          <div className={styles.stepLine} />
+          <div className={`${styles.step} ${step === 'otp' ? styles.stepActive : step === 'name' ? styles.stepDone : ''}`}>2</div>
+          <div className={styles.stepLine} />
+          <div className={`${styles.step} ${step === 'name' ? styles.stepActive : ''}`}>3</div>
+        </div>
 
-        <form onSubmit={handleSubmit} className={styles.form}>
-          {!isLogin && (
-            <div className={styles.field}>
-              <label>Full Name</label>
-              <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Enter your name" required />
+        {/* Step 1 — Phone */}
+        {step === 'phone' && (
+          <>
+            <h2>Sign In</h2>
+            <p className={styles.subtitle}>Enter your mobile number to receive an OTP</p>
+            {error && <div className={styles.error}>{error}</div>}
+            <form onSubmit={sendOTP} className={styles.form}>
+              <div className={styles.field}>
+                <label>Mobile Number</label>
+                <div className={styles.phoneRow}>
+                  <span className={styles.countryCode}>🇮🇳 +91</span>
+                  <input
+                    type="tel"
+                    value={phone}
+                    onChange={e => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                    placeholder="10-digit mobile number"
+                    autoFocus
+                  />
+                </div>
+              </div>
+              <button type="submit" className="btn btn-primary" style={{ width: '100%' }} disabled={loading}>
+                {loading ? 'Sending OTP...' : 'Send OTP →'}
+              </button>
+            </form>
+          </>
+        )}
+
+        {/* Step 2 — OTP */}
+        {step === 'otp' && (
+          <>
+            <h2>Enter OTP</h2>
+            <p className={styles.subtitle}>6-digit code sent to <strong>+91 {phone}</strong></p>
+            {error && <div className={styles.error}>{error}</div>}
+            <form onSubmit={verifyOTP} className={styles.form}>
+              <div className={styles.field}>
+                <label>OTP</label>
+                <input
+                  type="tel"
+                  value={otp}
+                  onChange={e => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  placeholder="• • • • • •"
+                  className={styles.otpInput}
+                  autoFocus
+                />
+              </div>
+              <button type="submit" className="btn btn-primary" style={{ width: '100%' }} disabled={loading}>
+                {loading ? 'Verifying...' : 'Verify OTP'}
+              </button>
+            </form>
+            <div className={styles.otpFooter}>
+              <button className={styles.linkBtn} onClick={() => { setStep('phone'); setError(''); setOtp(''); }}>
+                ← Change number
+              </button>
+              <button
+                className={styles.linkBtn}
+                onClick={resendOTP}
+                disabled={resendTimer > 0 || loading}
+                style={{ opacity: resendTimer > 0 ? 0.5 : 1 }}
+              >
+                {resendTimer > 0 ? `Resend in ${resendTimer}s` : 'Resend OTP'}
+              </button>
             </div>
-          )}
-          <div className={styles.field}>
-            <label>Email</label>
-            <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Enter your email" required />
-          </div>
-          <div className={styles.field}>
-            <label>Password</label>
-            <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Enter your password" minLength={6} required />
-          </div>
-          <button type="submit" className="btn btn-primary" style={{width:'100%'}}>{isLogin ? 'Sign In' : 'Create Account'}</button>
-        </form>
+          </>
+        )}
 
-        <p className={styles.toggle}>
-          {isLogin ? "Don't have an account? " : "Already have an account? "}
-          <button onClick={() => { setIsLogin(!isLogin); setError(''); }}>{isLogin ? 'Sign Up' : 'Sign In'}</button>
-        </p>
+        {/* Step 3 — Name (new users only) */}
+        {step === 'name' && (
+          <>
+            <h2>What's your name?</h2>
+            <p className={styles.subtitle}>We'll use this to personalise your experience</p>
+            {error && <div className={styles.error}>{error}</div>}
+            <form onSubmit={saveName} className={styles.form}>
+              <div className={styles.field}>
+                <label>Your Name</label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  placeholder="Enter your full name"
+                  autoFocus
+                />
+              </div>
+              <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>
+                Continue →
+              </button>
+            </form>
+          </>
+        )}
+
+        <div id="recaptcha-container" />
       </div>
     </div>
   );
