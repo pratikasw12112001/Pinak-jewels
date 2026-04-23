@@ -71,10 +71,10 @@ export default function HomePage() {
                 <Link href={`/category/${cat.slug}`} key={cat.slug} className={styles.categoryCard}>
                   <div className={styles.categoryImageWrapper}>
                     <img src={cat.image} alt={cat.name} className={styles.categoryImage} loading="lazy" />
-                    <span className={styles.categoryName}>{cat.name}</span>
-                  </div>
-                  <div className={styles.categoryFooter}>
-                    <span className={styles.categoryExploreBtn}>Explore →</span>
+                    <div className={styles.categoryOverlay}>
+                      <span className={styles.categoryName}>{cat.name}</span>
+                      <span className={styles.categoryExploreBtn}>Explore →</span>
+                    </div>
                   </div>
                 </Link>
               ))}

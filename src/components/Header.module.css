@@ -32,10 +32,9 @@
 .logo:hover { opacity: 0.9; }
 
 .logo img {
-  height: 78px;
+  height: 100px;
   width: auto;
   object-fit: contain;
-  border-radius: 10px;
 }
 
 /* Navigation */
@@ -345,7 +344,7 @@
 
 @media (max-width: 480px) {
   .logo img {
-    height: 63px;
+    height: 80px;
   }
 
   .icons {

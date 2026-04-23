@@ -145,88 +145,117 @@
 
 .categoryStrip::-webkit-scrollbar { display: none; }
 
-/* Card: image fills top, heading overlay on image, explore btn below */
+/* Category card — full-image portrait with branded overlay */
 .categoryCard {
   border-radius: var(--radius-lg);
   overflow: hidden;
-  transition: transform var(--transition-base), box-shadow var(--transition-base);
   scroll-snap-align: start;
   flex: 1 0 0;
   min-width: 160px;
-  background: var(--white);
-  border: 1px solid var(--border-color);
-  display: flex;
-  flex-direction: column;
+  display: block;
+  position: relative;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  transition: transform 0.38s ease, box-shadow 0.38s ease;
 }
 
 .categoryCard:hover {
-  transform: translateY(-5px);
-  box-shadow: var(--shadow-lg);
-  border-color: transparent;
+  transform: translateY(-10px);
+  box-shadow: 0 28px 52px rgba(15, 79, 58, 0.22);
 }
 
-/* Image area with heading overlaid */
 .categoryImageWrapper {
   position: relative;
   width: 100%;
-  aspect-ratio: 1 / 1;
+  aspect-ratio: 3 / 4;
   overflow: hidden;
-  background: var(--light-gray);
-  flex-shrink: 0;
 }
 
 .categoryImage {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform var(--transition-slow);
+  transition: transform 0.6s ease;
   display: block;
 }
 
 .categoryCard:hover .categoryImage {
-  transform: scale(1.07);
+  transform: scale(1.09);
 }
 
-/* Heading overlaid on the image — light gradient scrim behind text */
-.categoryName {
+/* Bottom gradient overlay — always present, deepens on hover */
+.categoryOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(6, 28, 17, 0.9) 0%,
+    rgba(6, 28, 17, 0.25) 45%,
+    transparent 70%
+  );
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 20px 16px;
+  transition: background 0.38s ease;
+}
+
+.categoryCard:hover .categoryOverlay {
+  background: linear-gradient(
+    to top,
+    rgba(6, 28, 17, 0.97) 0%,
+    rgba(6, 28, 17, 0.55) 55%,
+    rgba(6, 28, 17, 0.08) 80%
+  );
+}
+
+/* Gold top-edge shimmer line on hover */
+.categoryCard::after {
+  content: '';
   position: absolute;
   top: 0; left: 0; right: 0;
-  padding: 14px 14px 32px;
-  background: linear-gradient(to bottom, rgba(0,0,0,0.45) 0%, transparent 100%);
+  height: 3px;
+  background: linear-gradient(90deg, var(--luxury-gold), transparent, var(--luxury-gold));
+  opacity: 0;
+  transition: opacity 0.38s ease;
+}
+
+.categoryCard:hover::after {
+  opacity: 1;
+}
+
+/* Category label */
+.categoryName {
   font-family: var(--font-heading);
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 500;
   color: var(--white);
-  letter-spacing: 0.3px;
+  letter-spacing: 0.5px;
+  line-height: 1.2;
+  margin-bottom: 10px;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.4);
 }
 
-/* Explore button row below the image */
-.categoryFooter {
-  padding: 12px 14px;
-  border-top: 1px solid var(--border-color);
-}
-
+/* Explore CTA — slides up on hover */
 .categoryExploreBtn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 7px 16px;
-  border-radius: var(--radius-full);
-  border: 1.5px solid var(--primary-green);
-  color: var(--primary-green);
-  font-size: 12px;
-  font-weight: 600;
+  gap: 5px;
+  color: var(--luxury-gold);
+  font-size: 11px;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.8px;
-  background: transparent;
-  transition: all var(--transition-fast);
-  width: 100%;
-  justify-content: center;
+  letter-spacing: 2px;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.32s ease, transform 0.32s ease;
+  padding-bottom: 3px;
+  border-bottom: 1px solid rgba(230, 195, 106, 0.6);
+  width: fit-content;
 }
 
 .categoryCard:hover .categoryExploreBtn {
-  background: var(--primary-green);
-  color: var(--white);
+  opacity: 1;
+  transform: translateY(0);
 }
 
 /* Bestsellers */
@@ -305,11 +334,12 @@
     height: 70vh;
     min-height: 400px;
   }
-  /* On tablet/mobile, cards become fixed-width scrollable tiles */
   .categoryCard {
-    flex: 0 0 180px;
+    flex: 0 0 185px;
   }
-  /* Hide arrows on touch devices – swipe is natural */
+  .categoryName {
+    font-size: 16px;
+  }
   .catArrow {
     display: none;
   }
@@ -323,16 +353,15 @@
     height: 60vh;
   }
   .categoryCard {
-    flex: 0 0 140px;
+    flex: 0 0 145px;
   }
-  .categoryInfo {
-    padding: 12px;
+  .categoryName {
+    font-size: 14px;
+    margin-bottom: 8px;
   }
-  .categoryInfo h3 {
-    font-size: 13px;
-  }
-  .categoryLink {
-    font-size: 11px;
+  .categoryExploreBtn {
+    font-size: 10px;
+    letter-spacing: 1.5px;
   }
   .trustGrid {
     grid-template-columns: 1fr 1fr;
