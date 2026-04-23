@@ -10,75 +10,34 @@
   background: var(--white);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-xl);
-  padding: 40px;
+  padding: 48px 40px;
   width: 100%;
-  max-width: 420px;
+  max-width: 400px;
   text-align: center;
   box-shadow: var(--shadow-md);
 }
 
+.brandMark {
+  font-size: 28px;
+  color: var(--luxury-gold);
+  margin-bottom: 16px;
+  display: block;
+}
+
 .card h2 {
   font-family: var(--font-heading);
-  font-size: 1.6rem;
-  margin-bottom: 6px;
+  font-size: 1.7rem;
+  margin-bottom: 8px;
   color: var(--primary-green);
 }
 
 .subtitle {
   color: var(--text-secondary);
   font-size: 14px;
-  margin-bottom: 28px;
+  margin-bottom: 32px;
   line-height: 1.5;
 }
 
-.subtitle strong {
-  color: var(--text-primary);
-}
-
-/* Step indicator */
-.steps {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0;
-  margin-bottom: 28px;
-}
-
-.step {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  border: 2px solid var(--border-color);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-secondary);
-  background: var(--white);
-  transition: all 0.3s ease;
-  flex-shrink: 0;
-}
-
-.stepActive {
-  border-color: var(--primary-green);
-  background: var(--primary-green);
-  color: var(--white);
-}
-
-.stepDone {
-  border-color: var(--primary-green);
-  background: var(--primary-green);
-  color: var(--white);
-}
-
-.stepLine {
-  width: 40px;
-  height: 2px;
-  background: var(--border-color);
-}
-
-/* Form */
 .error {
   background: #fef2f2;
   color: #dc2626;
@@ -86,112 +45,63 @@
   border-radius: var(--radius-sm);
   font-size: 13px;
   margin-bottom: 16px;
-  text-align: left;
 }
 
-.form {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  text-align: left;
-}
-
-.field label {
-  display: block;
-  font-size: 13px;
-  font-weight: 500;
-  margin-bottom: 6px;
-  color: var(--text-primary);
-}
-
-/* Phone number row */
-.phoneRow {
-  display: flex;
-  align-items: stretch;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
-  overflow: hidden;
-  transition: border-color 0.2s ease;
-}
-
-.phoneRow:focus-within {
-  border-color: var(--primary-green);
-}
-
-.countryCode {
+/* Google button */
+.googleBtn {
   display: flex;
   align-items: center;
-  padding: 0 14px;
-  background: var(--ivory);
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-primary);
-  border-right: 1px solid var(--border-color);
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.phoneRow input {
-  border: none;
-  border-radius: 0;
-  flex: 1;
-  padding: 12px 14px;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 20px;
+  border-radius: var(--radius-full);
+  border: 1.5px solid var(--border-color);
+  background: var(--white);
   font-size: 15px;
-  letter-spacing: 0.5px;
-}
-
-.phoneRow input:focus {
-  border-color: transparent;
-  outline: none;
-}
-
-/* OTP input */
-.otpInput {
-  text-align: center !important;
-  font-size: 22px !important;
-  font-weight: 700 !important;
-  letter-spacing: 10px !important;
-  padding: 14px !important;
-  color: var(--primary-green) !important;
-}
-
-/* OTP footer links */
-.otpFooter {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 12px;
-}
-
-.linkBtn {
-  font-size: 13px;
-  color: var(--primary-green);
   font-weight: 500;
-  background: none;
-  border: none;
+  color: var(--text-primary);
   cursor: pointer;
-  padding: 0;
-  text-decoration: underline;
-  text-underline-offset: 2px;
+  transition: all var(--transition-fast);
+  box-shadow: var(--shadow-sm);
 }
 
-.linkBtn:hover {
-  color: var(--primary-green-hover);
+.googleBtn:hover {
+  border-color: #4285F4;
+  box-shadow: 0 2px 12px rgba(66, 133, 244, 0.18);
+  background: #f8faff;
 }
 
-.linkBtn:disabled {
+.googleBtn:disabled {
+  opacity: 0.6;
   cursor: default;
-  text-decoration: none;
 }
 
-/* Logged-in avatar */
+.terms {
+  margin-top: 20px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+/* Logged-in state */
+.avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  margin: 0 auto 16px;
+  display: block;
+  border: 2px solid var(--border-color);
+  object-fit: cover;
+}
+
 .avatarCircle {
-  width: 60px;
-  height: 60px;
+  width: 72px;
+  height: 72px;
   border-radius: 50%;
   background: var(--primary-green);
   color: var(--white);
-  font-size: 22px;
+  font-size: 28px;
   font-weight: 700;
   display: flex;
   align-items: center;
