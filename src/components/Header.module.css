@@ -32,7 +32,7 @@
 .logo:hover { opacity: 0.9; }
 
 .logo img {
-  height: 54px;
+  height: 48px;
   width: auto;
   object-fit: contain;
   mix-blend-mode: multiply;
@@ -346,7 +346,7 @@
 
 @media (max-width: 480px) {
   .logo img {
-    height: 44px;
+    height: 40px;
   }
 
   .icons {

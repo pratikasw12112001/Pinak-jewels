@@ -10,7 +10,7 @@ export default function Footer() {
           <div className={styles.footerGrid}>
             {/* Brand */}
             <div className={styles.footerBrand}>
-              <Link href="/" className={styles.footerLogoWrap}>
+              <Link href="/">
                 <img src="/logo-pinak-transparent.png" alt="Pinak Jewels" className={styles.footerLogo} />
               </Link>
               <p className={styles.brandDesc}>
