@@ -20,7 +20,9 @@ export default function CheckoutPage() {
   const { orders, addOrder, isLoaded: ordersLoaded } = useOrders();
   const router = useRouter();
   const shipping = cartTotal >= 2499 ? 0 : 99;
-  const total = cartTotal + shipping;
+  const GIFT_WRAP_PRICE = 40;
+  const [giftWrap, setGiftWrap] = useState(false);
+  const total = cartTotal + shipping + (giftWrap ? GIFT_WRAP_PRICE : 0);
 
   const [step, setStep] = useState(isLoggedIn ? 2 : 1);
   const [usesSavedAddress, setUsesSavedAddress] = useState(false);
@@ -334,6 +336,15 @@ export default function CheckoutPage() {
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                   Cash on Delivery (COD) is not available for this order.
                 </div>
+                {/* Gift Wrapping */}
+                <label style={{display:'flex',alignItems:'center',gap:'12px',background:'var(--ivory)',padding:'14px 16px',borderRadius:'var(--radius-sm)',marginBottom:'16px',cursor:'pointer',border:`1.5px solid ${giftWrap ? 'var(--primary-green)' : 'var(--border-color)'}`,transition:'border-color 0.2s'}}>
+                  <input type="checkbox" checked={giftWrap} onChange={e => setGiftWrap(e.target.checked)} style={{width:'18px',height:'18px',accentColor:'var(--primary-green)',cursor:'pointer'}} />
+                  <div style={{flex:1}}>
+                    <p style={{fontWeight:600,fontSize:'14px',margin:0}}>🎁 Gift Wrapping</p>
+                    <p style={{fontSize:'12px',color:'var(--text-secondary)',margin:'2px 0 0'}}>Beautiful gift packaging with a personal touch</p>
+                  </div>
+                  <span style={{fontWeight:700,color:'var(--primary-green)',fontSize:'14px'}}>+₹40</span>
+                </label>
                 <p className={styles.paymentInfo}>Secure payment powered by <strong>Razorpay</strong>. Supports UPI, Debit/Credit Cards, Net Banking & Wallets.</p>
                 {formError && <div style={{background:'#fef2f2',color:'#dc2626',padding:'12px 16px',borderRadius:'var(--radius-sm)',fontSize:'13px',marginBottom:'16px'}}>{formError}</div>}
                 <div className={styles.btnGroupCol}>
@@ -364,6 +375,7 @@ export default function CheckoutPage() {
             <div className={styles.summaryTotal}>
               <div><span>Subtotal</span><span>₹{cartTotal.toLocaleString()}</span></div>
               <div><span>Shipping</span><span>{shipping === 0 ? 'Free' : `₹${shipping}`}</span></div>
+              {giftWrap && <div><span>🎁 Gift Wrapping</span><span>₹40</span></div>}
               <div className={styles.grandTotal}><span>Total</span><span>₹{total.toLocaleString()}</span></div>
             </div>
           </div>
