@@ -6,10 +6,21 @@ import styles from './Footer.module.css';
 function NewsletterForm({ styles }) {
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (email) setSubscribed(true);
+    if (!email) return;
+    setLoading(true);
+    try {
+      await fetch('/api/newsletter', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+    } catch (_) {}
+    setSubscribed(true);
+    setLoading(false);
   };
 
   if (subscribed) {
@@ -36,7 +47,7 @@ function NewsletterForm({ styles }) {
           onChange={e => setEmail(e.target.value)}
           required
         />
-        <button type="submit" className={styles.newsletterBtn}>→</button>
+        <button type="submit" className={styles.newsletterBtn} disabled={loading}>{loading ? '...' : '→'}</button>
       </form>
     </div>
   );
