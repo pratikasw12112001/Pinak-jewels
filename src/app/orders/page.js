@@ -8,13 +8,14 @@ function getDeliveryDates(orderDateStr) {
   const orderDate = new Date(orderDateStr);
   let workingDays = 0;
   const minDate = new Date(orderDate);
-  while (workingDays < 9) {
+  while (workingDays < 7) {
     minDate.setDate(minDate.getDate() + 1);
     const day = minDate.getDay();
-    if (day !== 0) workingDays++; // Skip Sundays
+    if (day !== 0 && day !== 6) workingDays++;
   }
-  const maxDate = new Date(minDate); // Exact 9 days now
-  const fmt = (d) => d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+  const maxDate = new Date(minDate);
+  maxDate.setDate(maxDate.getDate() + 3);
+  const fmt = (d) => d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
   return { min: fmt(minDate), max: fmt(maxDate) };
 }
 
@@ -56,7 +57,7 @@ export default function OrdersPage() {
           {orders.map(order => {
             const delivery = getDeliveryDates(order.date);
             const orderDate = new Date(order.date).toLocaleDateString('en-IN', {
-              day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+              day: 'numeric', month: 'short', year: 'numeric'
             });
 
             return (

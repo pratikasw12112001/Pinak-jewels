@@ -110,7 +110,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* React imports missing from top so I will fix them */}
       <section className="section">
         <div className="container">
           <div className="section-title">

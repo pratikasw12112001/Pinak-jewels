@@ -95,9 +95,9 @@ export default function ProductDetailPage() {
             {/* Actions */}
             <div className={styles.actions}>
               <div className={styles.quantityPicker}>
-                <button onClick={() => setQuantity(Math.max(1, quantity - 1))}>−</button>
+                <button onClick={() => setQuantity(Math.max(1, quantity - 1))} disabled={quantity <= 1}>−</button>
                 <span>{quantity}</span>
-                <button onClick={() => setQuantity(quantity + 1)}>+</button>
+                <button onClick={() => setQuantity(Math.min(20, quantity + 1))} disabled={quantity >= 20}>+</button>
               </div>
               <button className={`btn btn-primary ${styles.addToCartBtn}`} onClick={handleAddToCart}>
                 Add to Cart

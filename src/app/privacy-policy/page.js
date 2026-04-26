@@ -19,7 +19,7 @@ export default function PrivacyPolicyPage() {
           At Pinak Jewels ("we," "our," or "us"), we respect your privacy and are committed to protecting the personal information you share with us when visiting or purchasing from our website at pinakjewels.com. This Privacy Policy explains what data we collect, how we use it, and your rights.
         </p>
 
-        <section>
+        <section className={styles.section}>
           <h2>1. Information We Collect</h2>
 
           <h3>1.1 Information You Provide Directly</h3>
@@ -44,7 +44,7 @@ export default function PrivacyPolicyPage() {
           <p>We do not store your payment card details on our servers. All payment transactions are processed through secure third-party payment gateways that comply with applicable security standards. We only receive a transaction confirmation and order reference.</p>
         </section>
 
-        <section>
+        <section className={styles.section}>
           <h2>2. How We Use Your Information</h2>
           <p>We use the information we collect to:</p>
           <ul>
@@ -58,7 +58,7 @@ export default function PrivacyPolicyPage() {
           </ul>
         </section>
 
-        <section>
+        <section className={styles.section}>
           <h2>3. Cookies &amp; Tracking</h2>
           <p>We use cookies and similar technologies to:</p>
           <ul>
@@ -69,7 +69,7 @@ export default function PrivacyPolicyPage() {
           <p>You can control or disable cookies through your browser settings. Note that disabling cookies may affect certain features of the website, such as the shopping cart.</p>
         </section>
 
-        <section>
+        <section className={styles.section}>
           <h2>4. Sharing Your Information</h2>
           <p>We do not sell, rent, or trade your personal information to third parties. We may share your information with:</p>
           <ul>
@@ -80,17 +80,17 @@ export default function PrivacyPolicyPage() {
           </ul>
         </section>
 
-        <section>
+        <section className={styles.section}>
           <h2>5. Data Retention</h2>
           <p>We retain your personal information for as long as necessary to fulfil the purposes outlined in this policy, or as required by law. Order-related data is generally retained for a minimum period in line with applicable tax and accounting regulations. You may request deletion of your data at any time (subject to legal obligations).</p>
         </section>
 
-        <section>
+        <section className={styles.section}>
           <h2>6. Data Security</h2>
           <p>We take reasonable technical and organisational measures to protect your personal information from unauthorised access, alteration, disclosure, or destruction. However, no internet transmission is completely secure, and we cannot guarantee absolute security.</p>
         </section>
 
-        <section>
+        <section className={styles.section}>
           <h2>7. Your Rights</h2>
           <p>Depending on your location and applicable law, you may have the right to:</p>
           <ul>
@@ -103,22 +103,22 @@ export default function PrivacyPolicyPage() {
           <p>To exercise any of these rights, please email us at <a href="mailto:pinakjewels04@gmail.com">pinakjewels04@gmail.com</a>.</p>
         </section>
 
-        <section>
+        <section className={styles.section}>
           <h2>8. Third-Party Links</h2>
           <p>Our website may contain links to third-party websites (e.g., social media platforms). We are not responsible for the privacy practices of those sites and encourage you to review their privacy policies independently.</p>
         </section>
 
-        <section>
+        <section className={styles.section}>
           <h2>9. Children's Privacy</h2>
           <p>Our website is not directed at children under the age of 13. We do not knowingly collect personal information from children. If we become aware that a child has provided us with personal data, we will delete it promptly.</p>
         </section>
 
-        <section>
+        <section className={styles.section}>
           <h2>10. Changes to This Privacy Policy</h2>
           <p>We may update this Privacy Policy from time to time. Any changes will be posted on this page with an updated effective date. We encourage you to review this policy periodically.</p>
         </section>
 
-        <section>
+        <section className={styles.section}>
           <h2>11. Contact Us</h2>
           <p>If you have any questions about this Privacy Policy, please email us at <a href="mailto:pinakjewels04@gmail.com">pinakjewels04@gmail.com</a>.</p>
         </section>

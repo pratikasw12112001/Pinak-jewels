@@ -53,12 +53,15 @@ export default function Header() {
   }, []);
 
   useEffect(() => {
-    if (searchQuery.length >= 2) {
-      const results = searchProducts(searchQuery).slice(0, 6);
-      setSearchResults(results);
-    } else {
-      setSearchResults([]);
-    }
+    const timer = setTimeout(() => {
+      if (searchQuery.length >= 2) {
+        const results = searchProducts(searchQuery).slice(0, 6);
+        setSearchResults(results);
+      } else {
+        setSearchResults([]);
+      }
+    }, 250);
+    return () => clearTimeout(timer);
   }, [searchQuery]);
 
   const handleSearchSubmit = (e) => {

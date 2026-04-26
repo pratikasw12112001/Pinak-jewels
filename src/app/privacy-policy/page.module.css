@@ -43,13 +43,13 @@
   margin-bottom: 40px;
 }
 
-section {
+.section {
   margin-bottom: 40px;
   padding-bottom: 40px;
   border-bottom: 1px solid var(--border-color);
 }
 
-section:last-child {
+.section:last-child {
   border-bottom: none;
 }
 

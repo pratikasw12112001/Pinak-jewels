@@ -19,12 +19,12 @@ export default function TermsOfServicePage() {
           These Terms of Service ("Terms") govern your use of the Pinak Jewels website at pinakjewels.com and any purchases made through it. By accessing or using our website, you agree to these Terms. Please read them carefully before placing an order.
         </p>
 
-        <section>
+        <section className={styles.section}>
           <h2>1. Acceptance of Terms</h2>
           <p>By browsing, accessing, or purchasing from our website, you confirm that you are at least 18 years of age (or have the consent of a parent or legal guardian), and that you agree to be bound by these Terms and our Privacy Policy.</p>
         </section>
 
-        <section>
+        <section className={styles.section}>
           <h2>2. Products &amp; Descriptions</h2>
           <p>Pinak Jewels offers anti-tarnish, waterproof fashion jewellery including bracelets, earrings, necklaces, rings, and pendants. We make every effort to display our products accurately through descriptions, photographs, and pricing. However:</p>
           <ul>
@@ -34,7 +34,7 @@ export default function TermsOfServicePage() {
           </ul>
         </section>
 
-        <section>
+        <section className={styles.section}>
           <h2>3. Pricing &amp; Payment</h2>
           <ul>
             <li>All prices on our website are listed in Indian Rupees (₹) and are inclusive of applicable taxes unless stated otherwise</li>
@@ -45,12 +45,12 @@ export default function TermsOfServicePage() {
           </ul>
         </section>
 
-        <section>
+        <section className={styles.section}>
           <h2>4. Orders &amp; Order Confirmation</h2>
           <p>Placing an order on our website constitutes an offer to purchase. An order is confirmed only upon receipt of an order confirmation email from us. We reserve the right to cancel or refuse any order at our discretion — for example, in cases of pricing errors, suspected fraud, or stock unavailability — and will provide a full refund in such cases.</p>
         </section>
 
-        <section>
+        <section className={styles.section}>
           <h2>5. Shipping &amp; Delivery</h2>
           <ul>
             <li>We ship to addresses within India unless otherwise specified</li>
@@ -61,7 +61,7 @@ export default function TermsOfServicePage() {
           </ul>
         </section>
 
-        <section>
+        <section className={styles.section}>
           <h2>6. Returns &amp; Refunds</h2>
 
           <h3>6.1 Eligibility</h3>
@@ -79,7 +79,7 @@ export default function TermsOfServicePage() {
           <p>Once we receive and inspect the returned item, refunds will be processed to your original payment method within 7–10 business days. We reserve the right to decline returns that do not meet our eligibility conditions.</p>
         </section>
 
-        <section>
+        <section className={styles.section}>
           <h2>7. Product Care &amp; Warranty</h2>
           <p>Our jewellery is crafted with anti-tarnish coating and waterproof materials designed for everyday wear. To maintain the quality and longevity of your pieces:</p>
           <ul>
@@ -90,12 +90,12 @@ export default function TermsOfServicePage() {
           <p>We do not offer a formal warranty on fashion jewellery, but if you receive a damaged or defective product, please contact us within 48 hours of delivery with photographs, and we will resolve the issue promptly.</p>
         </section>
 
-        <section>
+        <section className={styles.section}>
           <h2>8. Intellectual Property</h2>
           <p>All content on this website — including but not limited to the Pinak Jewels name, logo, product photographs, descriptions, designs, and website layout — is the intellectual property of Pinak Jewels. You may not copy, reproduce, distribute, or use any content from this website without our prior written permission.</p>
         </section>
 
-        <section>
+        <section className={styles.section}>
           <h2>9. User Conduct</h2>
           <p>By using our website, you agree not to:</p>
           <ul>
@@ -107,27 +107,27 @@ export default function TermsOfServicePage() {
           </ul>
         </section>
 
-        <section>
+        <section className={styles.section}>
           <h2>10. Limitation of Liability</h2>
           <p>To the fullest extent permitted by applicable law, Pinak Jewels shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of our website or products, including but not limited to loss of data, revenue, or profit. Our total liability to you in connection with any order shall not exceed the amount paid by you for that specific order.</p>
         </section>
 
-        <section>
+        <section className={styles.section}>
           <h2>11. Disclaimer of Warranties</h2>
           <p>Our website and products are provided "as is" and "as available." We make no warranties — express or implied — regarding the accuracy, completeness, or reliability of our website content, or the fitness of our products for any particular purpose, beyond what is expressly stated in our product descriptions.</p>
         </section>
 
-        <section>
+        <section className={styles.section}>
           <h2>12. Governing Law</h2>
           <p>These Terms are governed by and construed in accordance with the laws of India. Any disputes arising from or relating to these Terms or your use of our website shall be subject to the exclusive jurisdiction of the courts located in Nagpur, Maharashtra, India.</p>
         </section>
 
-        <section>
+        <section className={styles.section}>
           <h2>13. Changes to These Terms</h2>
           <p>We reserve the right to update or modify these Terms at any time. Changes will be effective upon posting on this page with a revised effective date. Continued use of our website after any changes constitutes your acceptance of the revised Terms.</p>
         </section>
 
-        <section>
+        <section className={styles.section}>
           <h2>14. Contact Us</h2>
           <p>If you have questions, concerns, or need assistance regarding these Terms, please email us at <a href="mailto:pinakjewels04@gmail.com">pinakjewels04@gmail.com</a>. We are happy to help.</p>
         </section>

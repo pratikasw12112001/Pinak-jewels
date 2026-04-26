@@ -1,6 +1,46 @@
 'use client';
+import { useState } from 'react';
 import Link from 'next/link';
 import styles from './Footer.module.css';
+
+function NewsletterForm({ styles }) {
+  const [email, setEmail] = useState('');
+  const [subscribed, setSubscribed] = useState(false);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (email) setSubscribed(true);
+  };
+
+  if (subscribed) {
+    return (
+      <div className={styles.footerCol}>
+        <h4>Stay Connected</h4>
+        <p className={styles.newsletterText} style={{ color: 'rgba(255,255,255,0.85)' }}>
+          ✓ Thanks for subscribing!
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className={styles.footerCol}>
+      <h4>Stay Connected</h4>
+      <p className={styles.newsletterText}>Subscribe for exclusive offers and new arrivals.</p>
+      <form className={styles.newsletterForm} onSubmit={handleSubmit}>
+        <input
+          type="email"
+          placeholder="Your email"
+          className={styles.newsletterInput}
+          value={email}
+          onChange={e => setEmail(e.target.value)}
+          required
+        />
+        <button type="submit" className={styles.newsletterBtn}>→</button>
+      </form>
+    </div>
+  );
+}
 
 export default function Footer() {
   return (
@@ -50,14 +90,7 @@ export default function Footer() {
             </div>
 
             {/* Newsletter */}
-            <div className={styles.footerCol}>
-              <h4>Stay Connected</h4>
-              <p className={styles.newsletterText}>Subscribe for exclusive offers and new arrivals.</p>
-              <form className={styles.newsletterForm} onSubmit={(e) => e.preventDefault()}>
-                <input type="email" placeholder="Your email" className={styles.newsletterInput} />
-                <button type="submit" className={styles.newsletterBtn}>→</button>
-              </form>
-            </div>
+            <NewsletterForm styles={styles} />
           </div>
         </div>
       </div>

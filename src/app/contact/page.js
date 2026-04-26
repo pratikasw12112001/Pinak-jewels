@@ -1,7 +1,22 @@
 'use client';
+import { useState } from 'react';
 import styles from './page.module.css';
 
 export default function ContactPage() {
+  const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
+  const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    await new Promise(r => setTimeout(r, 600));
+    setSubmitted(true);
+    setLoading(false);
+  };
+
+  const update = (field, val) => setForm(prev => ({ ...prev, [field]: val }));
+
   return (
     <div className="container">
       <div className={styles.contactPage}>
@@ -24,17 +39,43 @@ export default function ContactPage() {
             <div className={styles.infoCard}>
               <div className={styles.infoIcon}>⏰</div>
               <h3>Business Hours</h3>
-              <p>Mon - Sat: 10 AM - 7 PM</p>
+              <p>Mon – Sat: 10 AM – 7 PM</p>
             </div>
           </div>
-          <form className={styles.form} onSubmit={(e) => { e.preventDefault(); alert('Thank you! We will get back to you soon.'); }}>
-            <h3>Send a Message</h3>
-            <div className={styles.field}><label>Your Name</label><input type="text" placeholder="Enter your name" required /></div>
-            <div className={styles.field}><label>Your Email</label><input type="email" placeholder="Enter your email" required /></div>
-            <div className={styles.field}><label>Subject</label><input type="text" placeholder="What is this about?" /></div>
-            <div className={styles.field}><label>Message</label><textarea rows={5} placeholder="Tell us more..." required /></div>
-            <button type="submit" className="btn btn-primary" style={{width:'100%'}}>Send Message</button>
-          </form>
+
+          {submitted ? (
+            <div className={styles.successBox}>
+              <div className={styles.successIcon}>✓</div>
+              <h3>Message Sent!</h3>
+              <p>Thank you for reaching out. We'll get back to you within 24 hours at <strong>{form.email}</strong>.</p>
+              <button className="btn btn-outline" onClick={() => { setSubmitted(false); setForm({ name: '', email: '', subject: '', message: '' }); }}>
+                Send Another Message
+              </button>
+            </div>
+          ) : (
+            <form className={styles.form} onSubmit={handleSubmit}>
+              <h3>Send a Message</h3>
+              <div className={styles.field}>
+                <label>Your Name</label>
+                <input type="text" placeholder="Enter your name" value={form.name} onChange={e => update('name', e.target.value)} required />
+              </div>
+              <div className={styles.field}>
+                <label>Your Email</label>
+                <input type="email" placeholder="Enter your email" value={form.email} onChange={e => update('email', e.target.value)} required />
+              </div>
+              <div className={styles.field}>
+                <label>Subject</label>
+                <input type="text" placeholder="What is this about?" value={form.subject} onChange={e => update('subject', e.target.value)} />
+              </div>
+              <div className={styles.field}>
+                <label>Message</label>
+                <textarea rows={5} placeholder="Tell us more..." value={form.message} onChange={e => update('message', e.target.value)} required />
+              </div>
+              <button type="submit" className="btn btn-primary" style={{ width: '100%' }} disabled={loading}>
+                {loading ? 'Sending...' : 'Send Message'}
+              </button>
+            </form>
+          )}
         </div>
       </div>
     </div>

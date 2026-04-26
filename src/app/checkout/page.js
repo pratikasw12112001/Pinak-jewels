@@ -30,6 +30,7 @@ export default function CheckoutPage() {
   });
   const [processing, setProcessing] = useState(false);
   const [fetchingPincode, setFetchingPincode] = useState(false);
+  const [formError, setFormError] = useState('');
 
   const update = (field, val) => setForm(prev => ({ ...prev, [field]: val }));
 
@@ -96,8 +97,17 @@ export default function CheckoutPage() {
   }
 
   const handlePayment = async () => {
+    setFormError('');
     if (!form.fullName || !form.address1 || !form.city || !form.state || !form.pinCode || !form.phone || !form.email) {
-      alert('Please fill all required fields');
+      setFormError('Please fill all required fields before proceeding.');
+      return;
+    }
+    if (!/^\d{10}$/.test(form.phone)) {
+      setFormError('Please enter a valid 10-digit phone number.');
+      return;
+    }
+    if (form.pinCode.length !== 6) {
+      setFormError('Please enter a valid 6-digit PIN code.');
       return;
     }
     setProcessing(true);
@@ -235,7 +245,7 @@ export default function CheckoutPage() {
       const rzp = new window.Razorpay(options);
       rzp.open();
     } catch (err) {
-      alert('Payment failed. Please try again.');
+      setFormError('Payment failed. Please try again.');
     }
     setProcessing(false);
   };
@@ -308,7 +318,7 @@ export default function CheckoutPage() {
             {step === 3 && (
               <div className={styles.stepContent}>
                 <h3>Contact Details</h3>
-                <div className={styles.field}><label>Phone Number *</label><input type="tel" value={form.phone} onChange={e => update('phone', e.target.value)} maxLength={10} /></div>
+                <div className={styles.field}><label>Phone Number *</label><input type="tel" value={form.phone} onChange={e => update('phone', e.target.value.replace(/\D/g, '').slice(0, 10))} placeholder="10-digit mobile number" maxLength={10} /></div>
                 <div className={styles.field}><label>Email *</label><input type="email" value={form.email} onChange={e => update('email', e.target.value)} /></div>
                 <div className={styles.btnGroup}>
                   <button className="btn btn-outline" onClick={() => setStep(2)}>← Back</button>
@@ -325,6 +335,7 @@ export default function CheckoutPage() {
                   Cash on Delivery (COD) is not available for this order.
                 </div>
                 <p className={styles.paymentInfo}>Secure payment powered by <strong>Razorpay</strong>. Supports UPI, Debit/Credit Cards, Net Banking & Wallets.</p>
+                {formError && <div style={{background:'#fef2f2',color:'#dc2626',padding:'12px 16px',borderRadius:'var(--radius-sm)',fontSize:'13px',marginBottom:'16px'}}>{formError}</div>}
                 <div className={styles.btnGroupCol}>
                   <button className="btn btn-secondary" onClick={handlePayment} disabled={processing} style={{width: '100%', fontSize: '16px', padding: '16px'}}>
                     {processing ? 'Processing...' : `Pay ₹${total.toLocaleString()}`}

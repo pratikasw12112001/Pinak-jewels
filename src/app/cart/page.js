@@ -13,7 +13,7 @@ export default function CartPage() {
       <div className={styles.empty}>
         <div className={styles.emptyIcon}>🛍️</div>
         <h2>Your cart is empty</h2>
-        <p>Looks like you haven not added any items to your cart yet.</p>
+        <p>Looks like you haven't added any items to your cart yet.</p>
         <Link href="/" className="btn btn-primary">Continue Shopping</Link>
       </div>
     );
@@ -37,9 +37,9 @@ export default function CartPage() {
                 </div>
                 <div className={styles.itemActions}>
                   <div className={styles.qty}>
-                    <button onClick={() => updateQuantity(item.id, item.quantity - 1)}>−</button>
+                    <button onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))} disabled={item.quantity <= 1}>−</button>
                     <span>{item.quantity}</span>
-                    <button onClick={() => updateQuantity(item.id, item.quantity + 1)}>+</button>
+                    <button onClick={() => updateQuantity(item.id, Math.min(20, item.quantity + 1))} disabled={item.quantity >= 20}>+</button>
                   </div>
                   <p className={styles.itemTotal}>₹{(item.price * item.quantity).toLocaleString()}</p>
                   <button className={styles.removeBtn} onClick={() => removeFromCart(item.id)}>
