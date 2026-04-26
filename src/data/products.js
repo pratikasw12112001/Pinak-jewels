@@ -106,7 +106,7 @@ export const products = [
   },
   {
     id: 8,
-    name: "Aurelia Crystal Cuff Bracelet",
+    name: "Aurelia Cartier Cuff Bracelet",
     slug: "aurelia-crystal-cuff-bracelet",
     category: "Bracelets",
     categorySlug: "bracelets",
@@ -166,7 +166,7 @@ export const products = [
   },
   {
     id: 12,
-    name: "Aurelia Crystal Nail Cuff Bracelet",
+    name: "Aurelia Cartier Nail Cuff Bracelet",
     slug: "aurelia-crystal-nail-cuff-bracelet",
     category: "Bracelets",
     categorySlug: "bracelets",
@@ -226,7 +226,7 @@ export const products = [
   },
   {
     id: 16,
-    name: "Seraphina Pearl Stone Cuff Bracelet",
+    name: "Seraphina Pearl and Rough Stone Cuff Bracelet",
     slug: "seraphina-pearl-stone-cuff-bracelet",
     category: "Bracelets",
     categorySlug: "bracelets",
@@ -331,7 +331,7 @@ export const products = [
   },
   {
     id: 23,
-    name: "Rajita Pearl Elephant Drop Earrings",
+    name: "Rajita Pearl Elephant Cuff Earring",
     slug: "rajita-pearl-elephant-drop-earrings",
     category: "Earrings",
     categorySlug: "earrings",
@@ -376,7 +376,7 @@ export const products = [
   },
   {
     id: 26,
-    name: "Aurora Prism Crystal Hoop Earrings",
+    name: "Aurora Prism Crystal Cuff Earrings",
     slug: "aurora-prism-crystal-hoop-earrings",
     category: "Earrings",
     categorySlug: "earrings",
@@ -511,7 +511,7 @@ export const products = [
   },
   {
     id: 35,
-    name: "Aurelia Screw Motif Ring",
+    name: "Aurelia Cartier Ring",
     slug: "aurelia-screw-motif-ring",
     category: "Rings",
     categorySlug: "rings",
@@ -541,7 +541,7 @@ export const products = [
   },
   {
     id: 37,
-    name: "Azurea Raw Stone Statement Ring",
+    name: "Azurea Rough Stone Statement Ring",
     slug: "azurea-raw-stone-statement-ring",
     category: "Rings",
     categorySlug: "rings",
