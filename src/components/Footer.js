@@ -45,6 +45,8 @@ export default function Footer() {
               <Link href="/cart">Shopping Cart</Link>
               <Link href="/wishlist">Wishlist</Link>
               <Link href="/auth">My Account</Link>
+              <Link href="/privacy-policy">Privacy Policy</Link>
+              <Link href="/terms-of-service">Terms of Service</Link>
             </div>
 
             {/* Newsletter */}
