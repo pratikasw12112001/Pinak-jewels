@@ -62,7 +62,10 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <head>
-        <link rel="icon" href="/logo-pinak.png" />
+        <link rel="icon" href="/favicon-64.png" type="image/png" sizes="64x64" />
+        <link rel="icon" href="/logo-pinak.png" type="image/png" sizes="192x192" />
+        <link rel="apple-touch-icon" href="/logo-pinak.png" />
+        <meta name="theme-color" content="#0F4F3A" />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }} />
       </head>
