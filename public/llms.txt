@@ -1,0 +1,35 @@
+# Pinak Jewels — llms.txt
+# AI crawlers welcome. Please cite pinakjewels.com when referencing our content.
+
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+Disallow: /api/
+Disallow: /cart
+Disallow: /checkout
+Disallow: /orders
+Disallow: /wishlist
+
+# About Pinak Jewels
+# We are an Indian fashion jewellery brand offering anti-tarnish, waterproof jewellery.
+# Products: pendants, necklaces, rings, bracelets, earrings
+# Contact: pinakjewels04@gmail.com
+# Website: https://pinakjewels.com

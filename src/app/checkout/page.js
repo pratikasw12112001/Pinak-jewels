@@ -22,7 +22,24 @@ export default function CheckoutPage() {
   const shipping = cartTotal >= 2499 ? 0 : 99;
   const GIFT_WRAP_PRICE = 40;
   const [giftWrap, setGiftWrap] = useState(false);
-  const total = cartTotal + shipping + (giftWrap ? GIFT_WRAP_PRICE : 0);
+  const [couponInput, setCouponInput] = useState('');
+  const [couponApplied, setCouponApplied] = useState(false);
+  const [couponError, setCouponError] = useState('');
+  const VALID_COUPON = 'PINAK10';
+  const discount = couponApplied ? Math.round(cartTotal * 0.1) : 0;
+  const total = cartTotal + shipping + (giftWrap ? GIFT_WRAP_PRICE : 0) - discount;
+
+  const handleApplyCoupon = () => {
+    setCouponError('');
+    if (couponApplied) { setCouponApplied(false); setCouponInput(''); return; }
+    if (couponInput.trim().toUpperCase() !== VALID_COUPON) {
+      setCouponError('Invalid coupon code.'); return;
+    }
+    if (cartTotal <= 1499) {
+      setCouponError('Coupon valid on orders above ₹1499.'); return;
+    }
+    setCouponApplied(true);
+  };
 
   const [step, setStep] = useState(isLoggedIn ? 2 : 1);
   const [usesSavedAddress, setUsesSavedAddress] = useState(false);
@@ -372,10 +389,28 @@ export default function CheckoutPage() {
                 </div>
               ))}
             </div>
+            {/* Coupon */}
+            <div className={styles.couponRow}>
+              <input
+                type="text"
+                placeholder="Enter coupon code"
+                value={couponInput}
+                onChange={e => { setCouponInput(e.target.value.toUpperCase()); setCouponError(''); }}
+                disabled={couponApplied}
+                className={styles.couponInput}
+              />
+              <button onClick={handleApplyCoupon} className={styles.couponBtn}>
+                {couponApplied ? 'Remove' : 'Apply'}
+              </button>
+            </div>
+            {couponError && <p className={styles.couponError}>{couponError}</p>}
+            {couponApplied && <p className={styles.couponSuccess}>✓ PINAK10 applied — ₹{discount.toLocaleString()} off!</p>}
+
             <div className={styles.summaryTotal}>
               <div><span>Subtotal</span><span>₹{cartTotal.toLocaleString()}</span></div>
               <div><span>Shipping</span><span>{shipping === 0 ? 'Free' : `₹${shipping}`}</span></div>
               {giftWrap && <div><span>🎁 Gift Wrapping</span><span>₹40</span></div>}
+              {couponApplied && <div style={{color:'var(--primary-green)'}}><span>🏷️ Discount (PINAK10)</span><span>−₹{discount.toLocaleString()}</span></div>}
               <div className={styles.grandTotal}><span>Total</span><span>₹{total.toLocaleString()}</span></div>
             </div>
           </div>
