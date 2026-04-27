@@ -1,0 +1,79 @@
+.page {
+  min-height: 100vh;
+  background: #0F4F3A;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23e6c36a' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+
+.card {
+  background: white;
+  border-radius: 24px;
+  padding: 48px 40px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.25);
+  text-align: center;
+}
+
+.logo { margin-bottom: 8px; }
+.logoImg {
+  height: 36px;
+  width: auto;
+  mix-blend-mode: multiply;
+  margin: 0 auto;
+}
+
+.adminBadge {
+  display: inline-block;
+  background: #E6C36A;
+  color: #0F4F3A;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 4px 12px;
+  border-radius: 20px;
+  margin-bottom: 20px;
+}
+
+.card h1 {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.8rem;
+  font-weight: 500;
+  color: #0F4F3A;
+  margin-bottom: 6px;
+}
+
+.sub { font-size: 14px; color: #6b6b6b; margin-bottom: 28px; }
+
+.error {
+  background: #fef2f2;
+  color: #dc2626;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
+.form { display: flex; flex-direction: column; gap: 16px; text-align: left; }
+
+.field label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 6px; color: #1f1f1f; }
+
+.btn {
+  width: 100%;
+  padding: 14px;
+  background: #0F4F3A;
+  color: white;
+  border: none;
+  border-radius: 50px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-top: 8px;
+}
+.btn:hover:not(:disabled) { background: #0b3d2e; }
+.btn:disabled { opacity: 0.6; cursor: default; }
