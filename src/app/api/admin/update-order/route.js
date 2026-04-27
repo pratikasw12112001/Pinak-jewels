@@ -61,9 +61,15 @@ export async function POST(request) {
       });
 
       let subject, html;
-      const trackingUrl = carrier === 'Delhivery'
-        ? `https://www.delhivery.com/track/?waybill=${trackingNumber}`
-        : `https://www.indiapost.gov.in/vas/pages/trackConsignment.aspx`;
+      const trackingUrls = {
+        'Delhivery':   'https://www.delhivery.com/track/',
+        'India Post':  'https://www.indiapost.gov.in/vas/pages/trackConsignment.aspx',
+        'DTDC':        'https://www.dtdc.in/tracking.asp',
+        'Blue Dart':   'https://www.bluedart.com/tracking',
+        'Ekart':       'https://ekartlogistics.com/shipmenttrack',
+        'Xpressbees':  'https://www.xpressbees.com/shipment/tracking',
+      };
+      const trackingUrl = trackingUrls[carrier] || 'https://www.delhivery.com/track/';
 
       if (status === 'Shipped') {
         const estimate = getDeliveryEstimate();
@@ -90,7 +96,7 @@ export async function POST(request) {
                 <p style="margin:0;font-weight:600;font-size:14px;color:#374151;">By ${estimate}</p>
               </div>
               <div style="text-align:center;margin-bottom:24px;">
-                <a href="${trackingUrl}" style="display:inline-block;background:#0F4F3A;color:#E6C36A;padding:14px 32px;border-radius:50px;font-weight:600;font-size:14px;text-decoration:none;letter-spacing:0.5px;">Track Your Order →</a>
+                <a href="${trackingUrl}" style="display:inline-block;background:#0F4F3A;color:#E6C36A;padding:14px 32px;border-radius:50px;font-weight:600;font-size:14px;text-decoration:none;letter-spacing:0.5px;">Track on ${carrier} →</a>
               </div>
               <p style="font-size:13px;color:#6b7280;text-align:center;margin:0;">
                 Questions? Email us at <a href="mailto:pinakjewels04@gmail.com" style="color:#0F4F3A;font-weight:600;">pinakjewels04@gmail.com</a>
