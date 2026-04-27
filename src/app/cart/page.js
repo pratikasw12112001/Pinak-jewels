@@ -5,7 +5,8 @@ import styles from './page.module.css';
 
 export default function CartPage() {
   const { cartItems, removeFromCart, updateQuantity, cartTotal } = useCart();
-  const shipping = cartTotal >= 2499 ? 0 : 99;
+  const hasFreeShippingItem = cartItems.some(item => item.freeShipping);
+  const shipping = hasFreeShippingItem || cartTotal >= 2499 ? 0 : 99;
   const total = cartTotal + shipping;
 
   if (cartItems.length === 0) {

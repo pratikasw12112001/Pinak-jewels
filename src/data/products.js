@@ -808,6 +808,22 @@ export const products = [
     stock: 50,
     isNew: true,
     isBestseller: false
+  },
+  {
+    id: 99,
+    name: "Test",
+    slug: "test-necklace",
+    category: "Necklaces",
+    categorySlug: "necklaces",
+    material: "Brass",
+    price: 11,
+    image: "/products/product-1.jpg",
+    description: "Test product for payment verification.",
+    features: ["Anti Tarnish", "Waterproof"],
+    stock: 1,
+    isNew: false,
+    isBestseller: false,
+    freeShipping: true
   }
 ];
 

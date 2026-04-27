@@ -19,7 +19,8 @@ export default function CheckoutPage() {
   const { isLoggedIn, user } = useAuth();
   const { orders, addOrder, isLoaded: ordersLoaded } = useOrders();
   const router = useRouter();
-  const shipping = cartTotal >= 2499 ? 0 : 99;
+  const hasFreeShippingItem = cartItems.some(item => item.freeShipping);
+  const shipping = hasFreeShippingItem || cartTotal >= 2499 ? 0 : 99;
   const GIFT_WRAP_PRICE = 40;
   const [giftWrap, setGiftWrap] = useState(false);
   const [couponInput, setCouponInput] = useState('');
