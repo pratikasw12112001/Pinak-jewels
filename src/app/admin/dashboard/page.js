@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from './page.module.css';
 
@@ -10,8 +10,17 @@ const STATUS_COLORS = {
   Shipped:   { bg: '#EDE9FE', text: '#5B21B6', dot: '#7C3AED' },
   Delivered: { bg: '#D1FAE5', text: '#065F46', dot: '#10B981' },
 };
-
 const NEXT_STATUS = { Confirmed: 'Packed', Packed: 'Shipped', Shipped: 'Delivered' };
+
+// Admin sees direct tracking links; customer emails get landing pages (handled server-side)
+const ADMIN_TRACK_URLS = {
+  'Delhivery':  (n) => `https://www.delhivery.com/track/?waybill=${n}`,
+  'India Post': (n) => `https://www.indiapost.gov.in/vas/pages/trackConsignment.aspx?consignment=${n}`,
+  'DTDC':       (n) => `https://www.dtdc.com/in?trackingId=${n}`,
+  'Blue Dart':  (n) => `https://www.bluedart.com/tracking?trackfor=${n}`,
+  'Ekart':      (n) => `https://ekartlogistics.com/shipmenttrack?awb=${n}`,
+  'Xpressbees': (n) => `https://www.xpressbees.com/shipment/tracking?awb=${n}`,
+};
 
 function StatusBadge({ status }) {
   const c = STATUS_COLORS[status] || STATUS_COLORS.Confirmed;
@@ -26,26 +35,39 @@ function StatusBadge({ status }) {
 export default function AdminDashboard() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState('');
   const [filter, setFilter] = useState('All');
-  const [modal, setModal] = useState(null); // { order, nextStatus }
+  const [modal, setModal] = useState(null);
   const [tracking, setTracking] = useState('');
   const [carrier, setCarrier] = useState('Delhivery');
+  const [trackingError, setTrackingError] = useState('');
   const [updating, setUpdating] = useState(false);
+  const [updateError, setUpdateError] = useState('');
   const [toast, setToast] = useState('');
   const router = useRouter();
 
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     setLoading(true);
-    const res = await fetch('/api/admin/orders');
-    if (res.status === 401) { router.push('/admin'); return; }
-    const data = await res.json();
-    setOrders(data.orders || []);
+    setFetchError('');
+    try {
+      const res = await fetch('/api/admin/orders');
+      if (res.status === 401) { router.push('/admin'); return; }
+      const data = await res.json();
+      if (data.error) {
+        setFetchError('Failed to load orders. Check Firestore rules.');
+        setOrders([]);
+      } else {
+        setOrders(data.orders || []);
+      }
+    } catch {
+      setFetchError('Network error. Please refresh.');
+    }
     setLoading(false);
-  };
+  }, [router]);
 
-  useEffect(() => { fetchOrders(); }, []);
+  useEffect(() => { fetchOrders(); }, [fetchOrders]);
 
-  const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 3000); };
+  const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 3500); };
 
   const handleLogout = async () => {
     await fetch('/api/admin/logout', { method: 'POST' });
@@ -56,54 +78,70 @@ export default function AdminDashboard() {
     setModal({ order, nextStatus });
     setTracking('');
     setCarrier('Delhivery');
+    setTrackingError('');
+    setUpdateError('');
   };
 
   const handleUpdate = async () => {
     if (!modal) return;
     if (modal.nextStatus === 'Shipped' && !tracking.trim()) {
-      alert('Please enter a tracking number.'); return;
+      setTrackingError('Please enter a tracking number.'); return;
     }
+    setTrackingError('');
+    setUpdateError('');
     setUpdating(true);
-    const res = await fetch('/api/admin/update-order', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        docId: modal.order.docId,
-        status: modal.nextStatus,
-        trackingNumber: tracking,
-        carrier,
-        customerEmail: modal.order.email,
-        customerName: modal.order.name,
-        orderId: modal.order.orderId,
-        total: modal.order.price,
-      }),
-    });
-    const data = await res.json();
-    if (data.success) {
-      setOrders(prev => prev.map(o => o.docId === modal.order.docId
-        ? { ...o, status: modal.nextStatus, trackingNumber: tracking, carrier }
-        : o
-      ));
-      const msg = modal.nextStatus === 'Shipped'
-        ? `Order marked as Shipped — customer notified with tracking number`
-        : `Order marked as ${modal.nextStatus}${modal.nextStatus === 'Delivered' ? ' — customer notified' : ''}`;
-      showToast(msg);
+    try {
+      const res = await fetch('/api/admin/update-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          docId: modal.order.docId,
+          status: modal.nextStatus,
+          trackingNumber: tracking,
+          carrier,
+          customerEmail: modal.order.email,
+          customerName: modal.order.name,
+          orderId: modal.order.orderId,
+          total: modal.order.price,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setOrders(prev => prev.map(o => o.docId === modal.order.docId
+          ? { ...o, status: modal.nextStatus, trackingNumber: tracking, carrier }
+          : o
+        ));
+        const msg = modal.nextStatus === 'Shipped'
+          ? `✅ Order marked as Shipped — customer email sent with tracking info`
+          : modal.nextStatus === 'Delivered'
+          ? `✅ Order marked as Delivered — customer notified`
+          : `✅ Order marked as ${modal.nextStatus}`;
+        showToast(msg);
+        setModal(null);
+      } else {
+        setUpdateError('Update failed. Please try again.');
+      }
+    } catch {
+      setUpdateError('Network error. Please try again.');
     }
-    setModal(null);
     setUpdating(false);
   };
 
   const filtered = filter === 'All' ? orders : orders.filter(o => o.status === filter);
   const counts = STATUS_ORDER.reduce((acc, s) => ({ ...acc, [s]: orders.filter(o => o.status === s).length }), {});
+
   const todayOrders = orders.filter(o => {
+    if (!o.timestamp) return false;
     const d = new Date(o.timestamp);
-    const today = new Date();
-    return d.getDate() === today.getDate() && d.getMonth() === today.getMonth();
+    const now = new Date();
+    return d.getDate() === now.getDate() && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
   }).length;
 
   const fmtDate = (ts) => {
     if (!ts) return '—';
-    return new Date(ts).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    try {
+      return new Date(ts).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    } catch { return '—'; }
   };
 
   return (
@@ -164,6 +202,13 @@ export default function AdminDashboard() {
             <div className={styles.spinner} />
             <p>Loading orders...</p>
           </div>
+        ) : fetchError ? (
+          <div className={styles.emptyState}>
+            <div style={{ fontSize: '48px', marginBottom: '16px' }}>⚠️</div>
+            <h3>Could not load orders</h3>
+            <p>{fetchError}</p>
+            <button onClick={fetchOrders} className={styles.actionBtn} style={{ marginTop: '16px' }}>Try Again</button>
+          </div>
         ) : filtered.length === 0 ? (
           <div className={styles.emptyState}>
             <div style={{ fontSize: '48px', marginBottom: '16px' }}>📦</div>
@@ -174,11 +219,9 @@ export default function AdminDashboard() {
           <div className={styles.ordersList}>
             {filtered.map(order => {
               const next = NEXT_STATUS[order.status];
-              const trackUrl = order.trackingNumber
-                ? (order.carrier === 'Delhivery'
-                    ? `https://www.delhivery.com/track/?waybill=${order.trackingNumber}`
-                    : `https://www.indiapost.gov.in/vas/pages/trackConsignment.aspx`)
-                : null;
+              const trackFn = ADMIN_TRACK_URLS[order.carrier] || ADMIN_TRACK_URLS['Delhivery'];
+              const trackUrl = order.trackingNumber ? trackFn(order.trackingNumber) : null;
+
               return (
                 <div key={order.docId} className={styles.orderCard}>
                   <div className={styles.orderHeader}>
@@ -210,12 +253,16 @@ export default function AdminDashboard() {
 
                   {order.trackingNumber && (
                     <div className={styles.trackingBar}>
-                      <span>🚚 {order.carrier} · {order.trackingNumber}</span>
-                      {trackUrl && <a href={trackUrl} target="_blank" rel="noopener noreferrer" className={styles.trackLink}>Track →</a>}
+                      <span>🚚 {order.carrier} · <strong>{order.trackingNumber}</strong></span>
+                      {trackUrl && (
+                        <a href={trackUrl} target="_blank" rel="noopener noreferrer" className={styles.trackLink}>
+                          Track on {order.carrier} →
+                        </a>
+                      )}
                     </div>
                   )}
 
-                  {next && (
+                  {next ? (
                     <div className={styles.orderFooter}>
                       <button className={styles.actionBtn} onClick={() => openModal(order, next)}>
                         {next === 'Packed' && '📦 Mark as Packed'}
@@ -223,8 +270,11 @@ export default function AdminDashboard() {
                         {next === 'Delivered' && '✅ Mark as Delivered'}
                       </button>
                     </div>
+                  ) : (
+                    <div className={styles.orderFooter}>
+                      <span className={styles.doneTag}>✓ Order Complete</span>
+                    </div>
                   )}
-                  {!next && <div className={styles.orderFooter}><span className={styles.doneTag}>✓ Order Complete</span></div>}
                 </div>
               );
             })}
@@ -234,7 +284,7 @@ export default function AdminDashboard() {
 
       {/* Modal */}
       {modal && (
-        <div className={styles.modalOverlay} onClick={() => setModal(null)}>
+        <div className={styles.modalOverlay} onClick={() => !updating && setModal(null)}>
           <div className={styles.modal} onClick={e => e.stopPropagation()}>
             <h3>
               {modal.nextStatus === 'Packed' && '📦 Mark as Packed'}
@@ -247,7 +297,15 @@ export default function AdminDashboard() {
               <div className={styles.modalFields}>
                 <div className={styles.modalField}>
                   <label>Tracking Number *</label>
-                  <input type="text" value={tracking} onChange={e => setTracking(e.target.value)} placeholder="Enter courier tracking number" autoFocus />
+                  <input
+                    type="text"
+                    value={tracking}
+                    onChange={e => { setTracking(e.target.value); setTrackingError(''); }}
+                    placeholder="Enter courier tracking number"
+                    autoFocus
+                    style={trackingError ? { borderColor: '#dc2626' } : {}}
+                  />
+                  {trackingError && <p style={{ color: '#dc2626', fontSize: '12px', marginTop: '4px' }}>{trackingError}</p>}
                 </div>
                 <div className={styles.modalField}>
                   <label>Carrier</label>
@@ -260,7 +318,7 @@ export default function AdminDashboard() {
                     <option>Xpressbees</option>
                   </select>
                 </div>
-                <p className={styles.modalNote}>📧 Customer will receive an email with tracking details and a direct tracking link.</p>
+                <p className={styles.modalNote}>📧 Customer will receive an email with the tracking number and a link to {carrier}'s tracking page.</p>
               </div>
             )}
 
@@ -269,8 +327,10 @@ export default function AdminDashboard() {
             )}
 
             {modal.nextStatus === 'Packed' && (
-              <p className={styles.modalNote}>Order will be marked as packed. No customer email for this step.</p>
+              <p className={styles.modalNote}>Order will be marked as packed. No customer email is sent for this step.</p>
             )}
+
+            {updateError && <p style={{ color: '#dc2626', fontSize: '13px', marginTop: '12px', textAlign: 'center' }}>{updateError}</p>}
 
             <div className={styles.modalActions}>
               <button onClick={() => setModal(null)} className={styles.cancelBtn} disabled={updating}>Cancel</button>
