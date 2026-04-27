@@ -64,7 +64,7 @@ export async function POST(request) {
       const trackingUrls = {
         'Delhivery':   'https://www.delhivery.com/track/',
         'India Post':  'https://www.indiapost.gov.in/vas/pages/trackConsignment.aspx',
-        'DTDC':        'https://www.dtdc.in/tracking.asp',
+        'DTDC':        'https://www.dtdc.com/in',
         'Blue Dart':   'https://www.bluedart.com/tracking',
         'Ekart':       'https://ekartlogistics.com/shipmenttrack',
         'Xpressbees':  'https://www.xpressbees.com/shipment/tracking',
