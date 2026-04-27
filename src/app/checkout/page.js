@@ -126,6 +126,10 @@ export default function CheckoutPage() {
       setFormError('Please enter a valid 10-digit phone number.');
       return;
     }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+      setFormError('Please enter a valid email address.');
+      return;
+    }
     if (form.pinCode.length !== 6) {
       setFormError('Please enter a valid 6-digit PIN code.');
       return;
@@ -363,7 +367,12 @@ export default function CheckoutPage() {
                   </div>
                   <span style={{fontWeight:700,color:'var(--primary-green)',fontSize:'14px'}}>+₹40</span>
                 </label>
-                <p className={styles.paymentInfo}>Secure payment powered by <strong>Razorpay</strong>. Supports UPI, Debit/Credit Cards, Net Banking & Wallets.</p>
+                <div style={{display:'flex',gap:'12px',justifyContent:'center',marginBottom:'16px',flexWrap:'wrap'}}>
+                  <span style={{fontSize:'12px',color:'var(--text-secondary)',display:'flex',alignItems:'center',gap:'4px'}}>🔒 100% Secure Checkout</span>
+                  <span style={{fontSize:'12px',color:'var(--text-secondary)',display:'flex',alignItems:'center',gap:'4px'}}>✓ Razorpay Secured</span>
+                  <span style={{fontSize:'12px',color:'var(--text-secondary)',display:'flex',alignItems:'center',gap:'4px'}}>🛡️ SSL Encrypted</span>
+                </div>
+                <p className={styles.paymentInfo}>Supports UPI, Debit/Credit Cards, Net Banking & Wallets.</p>
                 {formError && <div style={{background:'#fef2f2',color:'#dc2626',padding:'12px 16px',borderRadius:'var(--radius-sm)',fontSize:'13px',marginBottom:'16px'}}>{formError}</div>}
                 <div className={styles.btnGroupCol}>
                   <button className="btn btn-secondary" onClick={handlePayment} disabled={processing} style={{width: '100%', fontSize: '16px', padding: '16px'}}>

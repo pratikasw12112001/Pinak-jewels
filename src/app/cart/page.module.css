@@ -12,13 +12,13 @@
 .itemPrice { font-size: 14px; color: var(--primary-green); font-weight: 600; }
 .itemActions { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
 .qty { display: flex; align-items: center; border: 1px solid var(--border-color); border-radius: var(--radius-sm); }
-.qty button { width: 32px; height: 32px; font-size: 16px; display: flex; align-items: center; justify-content: center; }
+.qty button { width: 40px; height: 40px; font-size: 16px; display: flex; align-items: center; justify-content: center; }
 .qty button:hover { background: var(--ivory); }
 .qty span { width: 32px; text-align: center; font-weight: 600; font-size: 14px; }
 .itemTotal { font-size: 16px; font-weight: 700; color: var(--text-primary); }
 .removeBtn { color: var(--text-secondary); padding: 4px; }
 .removeBtn:hover { color: #e74c3c; }
-.summary { background: var(--ivory); padding: 28px; border-radius: var(--radius-lg); position: sticky; top: calc(var(--header-height) + 24px); }
+.summary { background: var(--ivory); padding: 28px; border-radius: var(--radius-lg); position: sticky; top: calc(var(--promo-height) + var(--header-height) + 24px); }
 .summary h3 { font-family: var(--font-heading); font-size: 18px; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border-color); }
 .summaryRow { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 12px; color: var(--text-secondary); }
 .summaryRow span:last-child { font-weight: 600; color: var(--text-primary); }

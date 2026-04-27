@@ -10,7 +10,13 @@ export default function ContactPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    await new Promise(r => setTimeout(r, 600));
+    try {
+      await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      });
+    } catch (_) {}
     setSubmitted(true);
     setLoading(false);
   };
@@ -56,20 +62,20 @@ export default function ContactPage() {
             <form className={styles.form} onSubmit={handleSubmit}>
               <h3>Send a Message</h3>
               <div className={styles.field}>
-                <label>Your Name</label>
-                <input type="text" placeholder="Enter your name" value={form.name} onChange={e => update('name', e.target.value)} required />
+                <label htmlFor="contact-name">Your Name</label>
+                <input id="contact-name" type="text" placeholder="Enter your name" value={form.name} onChange={e => update('name', e.target.value)} required />
               </div>
               <div className={styles.field}>
-                <label>Your Email</label>
-                <input type="email" placeholder="Enter your email" value={form.email} onChange={e => update('email', e.target.value)} required />
+                <label htmlFor="contact-email">Your Email</label>
+                <input id="contact-email" type="email" placeholder="Enter your email" value={form.email} onChange={e => update('email', e.target.value)} required />
               </div>
               <div className={styles.field}>
-                <label>Subject</label>
-                <input type="text" placeholder="What is this about?" value={form.subject} onChange={e => update('subject', e.target.value)} />
+                <label htmlFor="contact-subject">Subject</label>
+                <input id="contact-subject" type="text" placeholder="What is this about?" value={form.subject} onChange={e => update('subject', e.target.value)} />
               </div>
               <div className={styles.field}>
-                <label>Message</label>
-                <textarea rows={5} placeholder="Tell us more..." value={form.message} onChange={e => update('message', e.target.value)} required />
+                <label htmlFor="contact-message">Message</label>
+                <textarea id="contact-message" rows={5} placeholder="Tell us more..." value={form.message} onChange={e => update('message', e.target.value)} required />
               </div>
               <button type="submit" className="btn btn-primary" style={{ width: '100%' }} disabled={loading}>
                 {loading ? 'Sending...' : 'Send Message'}

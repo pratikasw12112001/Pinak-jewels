@@ -23,7 +23,12 @@ export default function OrdersPage() {
   const { orders, isLoaded } = useOrders();
   const { isLoggedIn } = useAuth();
 
-  if (!isLoaded) return null;
+  if (!isLoaded) return (
+    <div style={{textAlign:'center',padding:'120px 24px',color:'var(--text-secondary)'}}>
+      <div style={{fontSize:'32px',marginBottom:'16px'}}>📦</div>
+      <p>Loading your orders...</p>
+    </div>
+  );
 
   if (!isLoggedIn) {
     return (
