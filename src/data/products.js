@@ -822,7 +822,8 @@ export const products = [
     features: ["Anti Tarnish", "Waterproof", "Premium Finish", "Lightweight"],
     stock: 50,
     isNew: false,
-    isBestseller: false
+    isBestseller: false,
+    freeShipping: true
   }
 ];
 
