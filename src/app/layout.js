@@ -4,10 +4,7 @@ import { WishlistProvider } from '@/context/WishlistContext';
 import { AuthProvider } from '@/context/AuthContext';
 import { OrderProvider } from '@/context/OrderContext';
 import { ToastProvider } from '@/components/Toast';
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
-import PromoBanner from '@/components/PromoBanner';
-import WhatsAppButton from '@/components/WhatsAppButton';
+import MainLayout from '@/components/MainLayout';
 
 export const metadata = {
   title: {
@@ -75,13 +72,7 @@ export default function RootLayout({ children }) {
             <WishlistProvider>
               <OrderProvider>
                 <ToastProvider>
-                  <PromoBanner />
-                  <Header />
-                  <main style={{ minHeight: 'calc(100vh - 300px)' }}>
-                    {children}
-                  </main>
-                  <Footer />
-                  <WhatsAppButton />
+                  <MainLayout>{children}</MainLayout>
                 </ToastProvider>
               </OrderProvider>
             </WishlistProvider>
