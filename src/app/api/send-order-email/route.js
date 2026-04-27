@@ -70,7 +70,7 @@ export async function POST(request) {
               ${items && items.length > 0 ? items.map(item => `
                 <tr style="border-bottom: 1px solid #f3f4f6;">
                   <td style="padding: 12px 8px; display: flex; align-items: center; gap: 12px;">
-                    <img src="https://pinakjewels.netlify.app${item.image}" alt="${item.name}" style="width: 48px; height: 48px; border-radius: 6px; object-fit: cover; border: 1px solid #e5e7eb;" />
+                    <img src="https://pinakjewels.com${item.image}" alt="${item.name}" style="width: 48px; height: 48px; border-radius: 6px; object-fit: cover; border: 1px solid #e5e7eb;" />
                     <span style="font-weight: 500;">${item.name}</span>
                   </td>
                   <td style="padding: 12px 8px; text-align: center;">${item.quantity}</td>
