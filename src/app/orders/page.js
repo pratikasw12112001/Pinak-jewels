@@ -6,6 +6,8 @@ import styles from './page.module.css';
 
 function getDeliveryDates(orderDateStr) {
   const orderDate = new Date(orderDateStr);
+  // An unparseable date would otherwise produce "Invalid Date" in the UI.
+  if (Number.isNaN(orderDate.getTime())) return null;
   let workingDays = 0;
   const minDate = new Date(orderDate);
   while (workingDays < 7) {
@@ -60,10 +62,19 @@ export default function OrdersPage() {
 
         <div className={styles.orderList}>
           {orders.map(order => {
+            // Older or partially-written orders may be missing fields; render
+            // them defensively rather than crashing the whole page.
             const delivery = getDeliveryDates(order.date);
-            const orderDate = new Date(order.date).toLocaleDateString('en-IN', {
-              day: 'numeric', month: 'short', year: 'numeric'
-            });
+            const parsedDate = new Date(order.date);
+            const orderDate = Number.isNaN(parsedDate.getTime())
+              ? '—'
+              : parsedDate.toLocaleDateString('en-IN', {
+                  day: 'numeric', month: 'short', year: 'numeric'
+                });
+            const items = Array.isArray(order.items) ? order.items : [];
+            const customer = order.customer || {};
+            const orderTotal = Number(order.total) || 0;
+            const orderSubtotal = Number(order.subtotal ?? order.total) || 0;
 
             return (
               <div key={order.id} className={styles.orderCard}>
@@ -73,21 +84,25 @@ export default function OrdersPage() {
                     <span className={styles.orderId}>Order #{order.id}</span>
                     <span className={styles.orderDate}>{orderDate}</span>
                   </div>
-                  <span className={styles.statusBadge}>{order.status}</span>
+                  <span className={styles.statusBadge}>{order.status || 'Confirmed'}</span>
                 </div>
 
                 {/* Items */}
                 <div className={styles.orderItems}>
-                  {order.items.map(item => (
-                    <div key={item.id} className={styles.orderItem}>
-                      <img src={item.image} alt={item.name} className={styles.itemImg} />
-                      <div className={styles.itemDetails}>
-                        <h4>{item.name}</h4>
-                        <p className={styles.itemMeta}>Qty: {item.quantity} × ₹{item.price.toLocaleString()}</p>
+                  {items.map((item, i) => {
+                    const price = Number(item?.price) || 0;
+                    const qty = Number(item?.quantity) || 0;
+                    return (
+                      <div key={item?.id ?? i} className={styles.orderItem}>
+                        {item?.image && <img src={item.image} alt={item?.name || 'Product'} className={styles.itemImg} />}
+                        <div className={styles.itemDetails}>
+                          <h4>{item?.name || 'Item'}</h4>
+                          <p className={styles.itemMeta}>Qty: {qty} × ₹{price.toLocaleString()}</p>
+                        </div>
+                        <span className={styles.itemTotal}>₹{(price * qty).toLocaleString()}</span>
                       </div>
-                      <span className={styles.itemTotal}>₹{(item.price * item.quantity).toLocaleString()}</span>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 {/* Order Info Grid */}
@@ -95,31 +110,33 @@ export default function OrdersPage() {
                   {/* Payment Info */}
                   <div className={styles.infoBlock}>
                     <h5>Payment</h5>
-                    <p><strong>Mode:</strong> {order.paymentMode}</p>
+                    <p><strong>Mode:</strong> {order.paymentMode || 'Online (Razorpay)'}</p>
                     {order.paymentId && <p><strong>Payment ID:</strong> {order.paymentId}</p>}
-                    <p><strong>Subtotal:</strong> ₹{(order.subtotal || order.total).toLocaleString()}</p>
-                    <p><strong>Shipping:</strong> {order.shipping === 0 ? 'Free' : `₹${order.shipping}`}</p>
-                    <p className={styles.totalAmount}><strong>Total:</strong> ₹{order.total.toLocaleString()}</p>
+                    <p><strong>Subtotal:</strong> ₹{orderSubtotal.toLocaleString()}</p>
+                    <p><strong>Shipping:</strong> {Number(order.shipping) > 0 ? `₹${order.shipping}` : 'Free'}</p>
+                    <p className={styles.totalAmount}><strong>Total:</strong> ₹{orderTotal.toLocaleString()}</p>
                   </div>
 
                   {/* Delivery Address */}
                   <div className={styles.infoBlock}>
                     <h5>Delivery Address</h5>
-                    <p><strong>{order.customer.fullName}</strong></p>
-                    <p>{order.customer.address1}</p>
-                    {order.customer.address2 && <p>{order.customer.address2}</p>}
-                    <p>{order.customer.city}, {order.customer.state} — {order.customer.pinCode}</p>
-                    <p>📞 {order.customer.phone}</p>
+                    <p><strong>{customer.fullName || '—'}</strong></p>
+                    {customer.address1 && <p>{customer.address1}</p>}
+                    {customer.address2 && <p>{customer.address2}</p>}
+                    {(customer.city || customer.state || customer.pinCode) && (
+                      <p>{customer.city}, {customer.state} — {customer.pinCode}</p>
+                    )}
+                    {customer.phone && <p>📞 {customer.phone}</p>}
                   </div>
                 </div>
 
                 {/* Delivery Estimate */}
-                <div className={styles.deliveryBanner}>
+                {delivery && <div className={styles.deliveryBanner}>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
                   </svg>
                   <span>Estimated delivery by <strong>{delivery.min} — {delivery.max}</strong> (9 working days)</span>
-                </div>
+                </div>}
               </div>
             );
           })}

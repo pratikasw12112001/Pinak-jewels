@@ -1,7 +1,31 @@
 'use client';
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { products } from '@/data/products';
 
 const CartContext = createContext();
+
+const MAX_QTY = 20;
+
+/**
+ * Rebuild a saved cart against current product data.
+ *
+ * A cart persisted in localStorage keeps whatever price it was saved with, so
+ * an old cart would display a stale price while the server charges the current
+ * one. Re-reading name/price/image from the product table keeps the displayed
+ * total identical to what the customer is actually charged.
+ */
+function reconcileCart(saved) {
+  if (!Array.isArray(saved)) return [];
+  return saved.reduce((acc, item) => {
+    const product = products.find(p => p.id === Number(item?.id));
+    // Drop items that no longer exist rather than showing a phantom line.
+    if (!product) return acc;
+
+    const quantity = Math.min(MAX_QTY, Math.max(1, Math.floor(Number(item?.quantity) || 1)));
+    acc.push({ ...product, quantity });
+    return acc;
+  }, []);
+}
 
 export function CartProvider({ children }) {
   const [cartItems, setCartItems] = useState([]);
@@ -11,7 +35,7 @@ export function CartProvider({ children }) {
     const saved = localStorage.getItem('pinak-cart');
     if (saved) {
       try {
-        setCartItems(JSON.parse(saved));
+        setCartItems(reconcileCart(JSON.parse(saved)));
       } catch (e) {
         localStorage.removeItem('pinak-cart');
       }
@@ -26,16 +50,19 @@ export function CartProvider({ children }) {
   }, [cartItems, isLoaded]);
 
   const addToCart = useCallback((product, quantity = 1) => {
+    const qty = Math.max(1, Math.floor(Number(quantity) || 1));
     setCartItems(prev => {
       const existing = prev.find(item => item.id === product.id);
       if (existing) {
         return prev.map(item =>
           item.id === product.id
-            ? { ...item, quantity: item.quantity + quantity }
+            // Cap the running total so repeated adds cannot exceed the limit
+            // the server enforces at payment time.
+            ? { ...item, quantity: Math.min(MAX_QTY, item.quantity + qty) }
             : item
         );
       }
-      return [...prev, { ...product, quantity }];
+      return [...prev, { ...product, quantity: Math.min(MAX_QTY, qty) }];
     });
   }, []);
 
@@ -44,13 +71,14 @@ export function CartProvider({ children }) {
   }, []);
 
   const updateQuantity = useCallback((productId, quantity) => {
-    if (quantity <= 0) {
+    const qty = Math.floor(Number(quantity) || 0);
+    if (qty <= 0) {
       removeFromCart(productId);
       return;
     }
     setCartItems(prev =>
       prev.map(item =>
-        item.id === productId ? { ...item, quantity } : item
+        item.id === productId ? { ...item, quantity: Math.min(MAX_QTY, qty) } : item
       )
     );
   }, [removeFromCart]);

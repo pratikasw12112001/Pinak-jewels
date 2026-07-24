@@ -36,9 +36,26 @@ export default function ProductDetail({ product }) {
   const shareText = `Check out ${product.name} on Pinak Jewels — ₹${product.price.toLocaleString()}`;
 
   const handleCopyLink = async () => {
-    await navigator.clipboard.writeText(productUrl);
-    setCopied(true);
-    setTimeout(() => { setCopied(false); setShareOpen(false); }, 1800);
+    // navigator.clipboard is undefined on insecure origins and older browsers,
+    // where an unguarded call throws and the share menu silently breaks.
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(productUrl);
+      } else {
+        const input = document.createElement('textarea');
+        input.value = productUrl;
+        input.style.position = 'fixed';
+        input.style.opacity = '0';
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand('copy');
+        document.body.removeChild(input);
+      }
+      setCopied(true);
+      setTimeout(() => { setCopied(false); setShareOpen(false); }, 1800);
+    } catch {
+      setShareOpen(false);
+    }
   };
 
   const handleWhatsAppShare = () => {

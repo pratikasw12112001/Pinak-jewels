@@ -18,7 +18,18 @@ export default function AuthPage() {
       await loginWithGoogle();
       router.push('/');
     } catch (err) {
-      setError('Sign-in failed. Please try again.');
+      // Closing the Google popup is a normal user action, not an error worth
+      // showing; a blocked popup needs a different instruction entirely.
+      const code = err?.code || '';
+      if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
+        setError('');
+      } else if (code === 'auth/popup-blocked') {
+        setError('Your browser blocked the sign-in popup. Please allow popups and try again.');
+      } else if (code === 'auth/network-request-failed') {
+        setError('Network error. Please check your connection and try again.');
+      } else {
+        setError('Sign-in failed. Please try again.');
+      }
     } finally {
       setLoading(false);
     }

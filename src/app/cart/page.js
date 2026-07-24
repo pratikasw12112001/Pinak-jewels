@@ -55,7 +55,7 @@ export default function CartPage() {
             <h3>Order Summary</h3>
             <div className={styles.summaryRow}><span>Subtotal</span><span>₹{cartTotal.toLocaleString()}</span></div>
             <div className={styles.summaryRow}><span>Shipping</span><span>{shipping === 0 ? 'Free' : `₹${shipping}`}</span></div>
-            {shipping > 0 && <p className={styles.freeShipNote}>Add ₹{(2499 - cartTotal).toLocaleString()} more for free shipping</p>}
+            {shipping > 0 && cartTotal < 2499 && <p className={styles.freeShipNote}>Add ₹{(2499 - cartTotal).toLocaleString()} more for free shipping</p>}
             <div className={`${styles.summaryRow} ${styles.totalRow}`}><span>Total</span><span>₹{total.toLocaleString()}</span></div>
             <Link href="/checkout" className="btn btn-primary" style={{width:'100%'}}>Proceed to Checkout</Link>
             <Link href="/" className={styles.continueShopping}>← Continue Shopping</Link>

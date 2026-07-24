@@ -1,7 +1,18 @@
 'use client';
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { products } from '@/data/products';
 
 const WishlistContext = createContext();
+
+/** Refresh saved entries from live product data and drop removed products. */
+function reconcileWishlist(saved) {
+  if (!Array.isArray(saved)) return [];
+  return saved.reduce((acc, item) => {
+    const product = products.find(p => p.id === Number(item?.id));
+    if (product) acc.push(product);
+    return acc;
+  }, []);
+}
 
 export function WishlistProvider({ children }) {
   const [wishlistItems, setWishlistItems] = useState([]);
@@ -11,7 +22,7 @@ export function WishlistProvider({ children }) {
     const saved = localStorage.getItem('pinak-wishlist');
     if (saved) {
       try {
-        setWishlistItems(JSON.parse(saved));
+        setWishlistItems(reconcileWishlist(JSON.parse(saved)));
       } catch (e) {
         localStorage.removeItem('pinak-wishlist');
       }

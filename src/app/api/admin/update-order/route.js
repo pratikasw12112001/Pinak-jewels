@@ -1,17 +1,20 @@
-import crypto from 'crypto';
 import nodemailer from 'nodemailer';
 import { NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/admin-auth';
+import { patchDocument } from '@/lib/firestore-server';
+import { escapeHtml, clean, isValidEmail } from '@/lib/security';
 
 export const dynamic = 'force-dynamic';
 
-function verifySession(request) {
-  const session = request.cookies.get('admin-session');
-  const secret = process.env.ADMIN_SESSION_SECRET || 'pinak-admin-secure-key-2026';
-  const email = process.env.ADMIN_EMAIL || 'pinakjewels04@gmail.com';
-  const password = process.env.ADMIN_PASSWORD || 'mahakaswani';
-  const expected = crypto.createHash('sha256').update(email + password + secret).digest('hex');
-  return session?.value === expected;
-}
+// Must stay in sync with STATUS_ORDER / NEXT_STATUS in the admin dashboard.
+const ALLOWED_STATUSES = [
+  'Confirmed',
+  'Packed',
+  'Shipped',
+  'Delivered',
+  'Cancelled',
+  'Needs Review',
+];
 
 function getDeliveryEstimate() {
   const date = new Date();
@@ -24,41 +27,58 @@ function getDeliveryEstimate() {
 }
 
 export async function POST(request) {
-  if (!verifySession(request)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const denied = requireAdmin(request);
+  if (denied) {
+    return NextResponse.json({ error: denied.error }, { status: denied.status });
   }
 
-  const { docId, status, trackingNumber, carrier, customerEmail, customerName, orderId, total } = await request.json();
+  const { docId, status, trackingNumber, carrier, customerEmail, customerName, orderId } =
+    await request.json();
 
-  const apiKey = process.env.FIREBASE_API_KEY || 'AIzaSyB4-6hDvdCNwBG1RAkvDawLvIS58cpPcqo';
-  const projectId = 'pinak-jewels';
+  if (!docId) {
+    return NextResponse.json({ error: 'Missing order reference.' }, { status: 400 });
+  }
+  if (!ALLOWED_STATUSES.includes(status)) {
+    return NextResponse.json({ error: 'Invalid order status.' }, { status: 400 });
+  }
+  if (status === 'Shipped' && !String(trackingNumber || '').trim()) {
+    return NextResponse.json(
+      { error: 'A tracking number is required to mark an order as Shipped.' },
+      { status: 400 }
+    );
+  }
 
-  // Update in Firestore
-  const fields = {
-    status: { stringValue: status },
-    trackingNumber: { stringValue: trackingNumber || '' },
-    carrier: { stringValue: carrier || 'Delhivery' },
-    updatedAt: { stringValue: new Date().toISOString() },
-  };
+  // The previous version ignored the Firestore response and always reported
+  // success, so a failed update looked like it worked in the dashboard.
+  try {
+    await patchDocument('orders', docId, {
+      status,
+      trackingNumber: String(trackingNumber || '').trim(),
+      carrier: carrier || 'Delhivery',
+      updatedAt: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error('Order update failed:', error);
+    return NextResponse.json(
+      { error: 'Could not update the order. Please try again.' },
+      { status: 502 }
+    );
+  }
 
-  const updateMask = Object.keys(fields).map(f => `updateMask.fieldPaths=${f}`).join('&');
-
-  await fetch(
-    `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/orders/${docId}?${updateMask}&key=${apiKey}`,
-    {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ fields }),
-    }
-  );
-
+  let emailSent = false;
   // Send customer email if status is Shipped or Delivered
-  if ((status === 'Shipped' || status === 'Delivered') && customerEmail) {
+  if ((status === 'Shipped' || status === 'Delivered') && isValidEmail(customerEmail)) {
     try {
       const transporter = nodemailer.createTransport({
         service: 'gmail',
         auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
       });
+
+      // These emails go to customers, so escape every interpolated value.
+      const safeCustomerName = escapeHtml(clean(customerName, 120)) || 'there';
+      const safeOrderId = escapeHtml(clean(orderId, 100));
+      const safeTracking = escapeHtml(clean(trackingNumber, 100));
+      const safeCarrier = escapeHtml(clean(carrier, 60)) || 'Delhivery';
 
       let subject, html;
       const trackingUrls = {
@@ -82,21 +102,21 @@ export async function POST(request) {
             </div>
             <div style="padding:32px;">
               <p style="font-size:15px;color:#374151;line-height:1.7;margin:0 0 24px;">
-                Hi <strong>${customerName || 'there'}</strong>,<br><br>
+                Hi <strong>${safeCustomerName}</strong>,<br><br>
                 Great news! Your order has been shipped and is on its way to you.
               </p>
               <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:20px;margin-bottom:24px;text-align:center;">
                 <p style="margin:0 0 6px;font-size:13px;color:#6b7280;">Order ID</p>
-                <p style="margin:0 0 16px;font-weight:700;font-size:15px;color:#1f2937;">${orderId}</p>
+                <p style="margin:0 0 16px;font-weight:700;font-size:15px;color:#1f2937;">${safeOrderId}</p>
                 <p style="margin:0 0 6px;font-size:13px;color:#6b7280;">Tracking Number</p>
-                <p style="margin:0 0 16px;font-weight:700;font-size:18px;color:#0F4F3A;letter-spacing:1px;">${trackingNumber}</p>
+                <p style="margin:0 0 16px;font-weight:700;font-size:18px;color:#0F4F3A;letter-spacing:1px;">${safeTracking}</p>
                 <p style="margin:0 0 6px;font-size:13px;color:#6b7280;">Carrier</p>
-                <p style="margin:0 0 16px;font-weight:600;font-size:14px;color:#374151;">${carrier}</p>
+                <p style="margin:0 0 16px;font-weight:600;font-size:14px;color:#374151;">${safeCarrier}</p>
                 <p style="margin:0 0 6px;font-size:13px;color:#6b7280;">Estimated Delivery</p>
                 <p style="margin:0;font-weight:600;font-size:14px;color:#374151;">By ${estimate}</p>
               </div>
               <div style="text-align:center;margin-bottom:24px;">
-                <a href="${trackingUrl}" style="display:inline-block;background:#0F4F3A;color:#E6C36A;padding:14px 32px;border-radius:50px;font-weight:600;font-size:14px;text-decoration:none;letter-spacing:0.5px;">Track on ${carrier} →</a>
+                <a href="${trackingUrl}" style="display:inline-block;background:#0F4F3A;color:#E6C36A;padding:14px 32px;border-radius:50px;font-weight:600;font-size:14px;text-decoration:none;letter-spacing:0.5px;">Track on ${safeCarrier} →</a>
               </div>
               <p style="font-size:13px;color:#6b7280;text-align:center;margin:0;">
                 Questions? Email us at <a href="mailto:pinakjewels04@gmail.com" style="color:#0F4F3A;font-weight:600;">pinakjewels04@gmail.com</a>
@@ -117,8 +137,8 @@ export async function POST(request) {
             </div>
             <div style="padding:32px;">
               <p style="font-size:15px;color:#374151;line-height:1.7;margin:0 0 24px;">
-                Hi <strong>${customerName || 'there'}</strong>,<br><br>
-                Your Pinak Jewels order <strong>#${orderId}</strong> has been delivered! We hope you love your new jewellery. 💫
+                Hi <strong>${safeCustomerName}</strong>,<br><br>
+                Your Pinak Jewels order <strong>#${safeOrderId}</strong> has been delivered! We hope you love your new jewellery. 💫
               </p>
               <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:20px;margin-bottom:24px;text-align:center;">
                 <div style="font-size:40px;margin-bottom:8px;">✅</div>
@@ -143,10 +163,13 @@ export async function POST(request) {
         subject,
         html,
       });
+      emailSent = true;
     } catch (err) {
+      // The status change already succeeded; surface the email failure instead
+      // of silently swallowing it so the admin can follow up manually.
       console.error('Status email error:', err);
     }
   }
 
-  return NextResponse.json({ success: true });
+  return NextResponse.json({ success: true, emailSent });
 }

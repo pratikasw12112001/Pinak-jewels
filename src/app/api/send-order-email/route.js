@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
+import { escapeHtml, clean, isValidEmail, rateLimit, getClientIp } from '@/lib/security';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,7 +19,42 @@ function getDeliveryDate() {
 
 export async function POST(request) {
   try {
-    const { name, email, phone, address, product, price, paymentId, orderId, items } = await request.json();
+    const limit = rateLimit(`order-email:${getClientIp(request)}`, { max: 20, windowMs: 60 * 60 * 1000 });
+    if (!limit.allowed) {
+      return NextResponse.json({ success: false, error: 'Too many requests.' }, { status: 429 });
+    }
+
+    const body = await request.json();
+    const name = clean(body.name, 120);
+    const email = clean(body.email, 254);
+    const phone = clean(body.phone, 20);
+    const address = clean(body.address, 400);
+    const product = clean(body.product, 600);
+    const paymentId = clean(body.paymentId, 100);
+    const orderId = clean(body.orderId, 100);
+    const price = Number(body.price);
+    const items = Array.isArray(body.items) ? body.items.slice(0, 50) : [];
+
+    if (!isValidEmail(email)) {
+      return NextResponse.json({ success: false, error: 'A valid email is required.' }, { status: 400 });
+    }
+    if (!Number.isFinite(price) || price < 0) {
+      return NextResponse.json({ success: false, error: 'Invalid order amount.' }, { status: 400 });
+    }
+
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      console.error('Order email: credentials are not configured');
+      return NextResponse.json({ success: false, error: 'Email service unavailable.' }, { status: 503 });
+    }
+
+    // Everything interpolated into the HTML below is escaped.
+    const safeName = escapeHtml(name);
+    const safeEmail = escapeHtml(email);
+    const safePhone = escapeHtml(phone);
+    const safeAddress = escapeHtml(address);
+    const safeProduct = escapeHtml(product);
+    const safePaymentId = escapeHtml(paymentId);
+    const safeOrderId = escapeHtml(orderId);
 
     const transporter = nodemailer.createTransport({
       service: 'gmail',
@@ -46,16 +82,16 @@ export async function POST(request) {
         </div>
         <div style="padding: 28px 32px;">
           <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
-            <tr><td style="padding: 10px 0; color: #6b7280; border-bottom: 1px solid #f3f4f6; width: 140px;">Order ID</td><td style="padding: 10px 0; font-weight: 600; border-bottom: 1px solid #f3f4f6;">${orderId}</td></tr>
-            <tr><td style="padding: 10px 0; color: #6b7280; border-bottom: 1px solid #f3f4f6;">Payment ID</td><td style="padding: 10px 0; font-weight: 600; border-bottom: 1px solid #f3f4f6;">${paymentId}</td></tr>
+            <tr><td style="padding: 10px 0; color: #6b7280; border-bottom: 1px solid #f3f4f6; width: 140px;">Order ID</td><td style="padding: 10px 0; font-weight: 600; border-bottom: 1px solid #f3f4f6;">${safeOrderId}</td></tr>
+            <tr><td style="padding: 10px 0; color: #6b7280; border-bottom: 1px solid #f3f4f6;">Payment ID</td><td style="padding: 10px 0; font-weight: 600; border-bottom: 1px solid #f3f4f6;">${safePaymentId}</td></tr>
             <tr><td style="padding: 10px 0; color: #6b7280; border-bottom: 1px solid #f3f4f6;">Timestamp</td><td style="padding: 10px 0; border-bottom: 1px solid #f3f4f6;">${timestamp}</td></tr>
           </table>
           <h3 style="margin: 24px 0 12px; color: #0F4F3A; font-size: 15px; text-transform: uppercase; letter-spacing: 1px;">Customer Details</h3>
           <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
-            <tr><td style="padding: 8px 0; color: #6b7280; width: 140px;">Name</td><td style="padding: 8px 0; font-weight: 500;">${name}</td></tr>
-            <tr><td style="padding: 8px 0; color: #6b7280;">Email</td><td style="padding: 8px 0;">${email}</td></tr>
-            <tr><td style="padding: 8px 0; color: #6b7280;">Phone</td><td style="padding: 8px 0;">${phone}</td></tr>
-            <tr><td style="padding: 8px 0; color: #6b7280;">Address</td><td style="padding: 8px 0;">${address}</td></tr>
+            <tr><td style="padding: 8px 0; color: #6b7280; width: 140px;">Name</td><td style="padding: 8px 0; font-weight: 500;">${safeName}</td></tr>
+            <tr><td style="padding: 8px 0; color: #6b7280;">Email</td><td style="padding: 8px 0;">${safeEmail}</td></tr>
+            <tr><td style="padding: 8px 0; color: #6b7280;">Phone</td><td style="padding: 8px 0;">${safePhone}</td></tr>
+            <tr><td style="padding: 8px 0; color: #6b7280;">Address</td><td style="padding: 8px 0;">${safeAddress}</td></tr>
           </table>
           <h3 style="margin: 24px 0 12px; color: #0F4F3A; font-size: 15px; text-transform: uppercase; letter-spacing: 1px;">Order Details</h3>
           <table style="width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 20px;">
@@ -67,17 +103,26 @@ export async function POST(request) {
               </tr>
             </thead>
             <tbody>
-              ${items && items.length > 0 ? items.map(item => `
+              ${items && items.length > 0 ? items.map(item => {
+                const itemName = escapeHtml(clean(item?.name, 200));
+                // Only allow site-relative image paths — an attacker-supplied
+                // absolute URL would turn the email into a tracking beacon.
+                const rawImage = String(item?.image || '');
+                const itemImage = /^\/[A-Za-z0-9._/-]*$/.test(rawImage) ? escapeHtml(rawImage) : '';
+                const itemQty = Number(item?.quantity) || 0;
+                const itemPrice = Number(item?.price) || 0;
+                return `
                 <tr style="border-bottom: 1px solid #f3f4f6;">
                   <td style="padding: 12px 8px; display: flex; align-items: center; gap: 12px;">
-                    <img src="https://pinakjewels.com${item.image}" alt="${item.name}" style="width: 48px; height: 48px; border-radius: 6px; object-fit: cover; border: 1px solid #e5e7eb;" />
-                    <span style="font-weight: 500;">${item.name}</span>
+                    ${itemImage ? `<img src="https://pinakjewels.com${itemImage}" alt="${itemName}" style="width: 48px; height: 48px; border-radius: 6px; object-fit: cover; border: 1px solid #e5e7eb;" />` : ''}
+                    <span style="font-weight: 500;">${itemName}</span>
                   </td>
-                  <td style="padding: 12px 8px; text-align: center;">${item.quantity}</td>
-                  <td style="padding: 12px 8px; text-align: right;">₹${item.price.toLocaleString('en-IN')}</td>
+                  <td style="padding: 12px 8px; text-align: center;">${itemQty}</td>
+                  <td style="padding: 12px 8px; text-align: right;">₹${itemPrice.toLocaleString('en-IN')}</td>
                 </tr>
-              `).join('') : `
-                <tr><td colspan="3" style="padding: 12px 8px;">${product}</td></tr>
+              `;
+              }).join('') : `
+                <tr><td colspan="3" style="padding: 12px 8px;">${safeProduct}</td></tr>
               `}
               <tr style="background: #f0fdf4;">
                 <td colspan="2" style="padding: 16px 8px; color: #0F4F3A; font-weight: 600; font-size: 16px; text-align: right;">Total Amount</td>
@@ -102,16 +147,16 @@ export async function POST(request) {
 
         <div style="padding: 28px 32px;">
           <p style="font-size: 15px; color: #374151; line-height: 1.6; margin: 0 0 20px;">
-            Hi <strong>${name}</strong>,<br><br>
+            Hi <strong>${safeName}</strong>,<br><br>
             Thank you for shopping with <strong>Pinak Jewels</strong>! We're excited to confirm your order. Here are your order details:
           </p>
 
           <!-- Order Summary -->
           <div style="background: #f9fafb; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
             <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
-              <tr><td style="padding: 8px 0; color: #6b7280; width: 130px;">Order ID</td><td style="padding: 8px 0; font-weight: 600;">${orderId}</td></tr>
-              <tr><td style="padding: 8px 0; color: #6b7280;">Payment ID</td><td style="padding: 8px 0; font-weight: 600;">${paymentId}</td></tr>
-              <tr><td style="padding: 8px 0; color: #6b7280;">Product(s)</td><td style="padding: 8px 0;">${product}</td></tr>
+              <tr><td style="padding: 8px 0; color: #6b7280; width: 130px;">Order ID</td><td style="padding: 8px 0; font-weight: 600;">${safeOrderId}</td></tr>
+              <tr><td style="padding: 8px 0; color: #6b7280;">Payment ID</td><td style="padding: 8px 0; font-weight: 600;">${safePaymentId}</td></tr>
+              <tr><td style="padding: 8px 0; color: #6b7280;">Product(s)</td><td style="padding: 8px 0;">${safeProduct}</td></tr>
               <tr><td style="padding: 8px 0; color: #6b7280;">Amount Paid</td><td style="padding: 8px 0; font-weight: 700; color: #0F4F3A; font-size: 16px;">${formattedPrice}</td></tr>
               <tr><td style="padding: 8px 0; color: #6b7280;">Order Date</td><td style="padding: 8px 0;">${timestamp}</td></tr>
             </table>
@@ -121,9 +166,9 @@ export async function POST(request) {
           <div style="background: #f9fafb; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
             <h3 style="margin: 0 0 10px; font-size: 14px; color: #0F4F3A; text-transform: uppercase; letter-spacing: 0.5px;">Delivery Address</h3>
             <p style="font-size: 14px; color: #374151; margin: 0; line-height: 1.6;">
-              <strong>${name}</strong><br>
-              ${address}<br>
-              📞 ${phone}
+              <strong>${safeName}</strong><br>
+              ${safeAddress}<br>
+              📞 ${safePhone}
             </p>
           </div>
 
@@ -157,14 +202,14 @@ export async function POST(request) {
       transporter.sendMail({
         from: `"Pinak Jewels" <${process.env.EMAIL_USER}>`,
         to: process.env.EMAIL_TO || 'pinakjewels04@gmail.com',
-        subject: `🛍️ New Order #${orderId} — ${formattedPrice} from ${name}`,
+        subject: `🛍️ New Order #${safeOrderId} — ${formattedPrice} from ${safeName}`,
         html: adminHtml,
       }),
       // Buyer thank you
       transporter.sendMail({
         from: `"Pinak Jewels" <${process.env.EMAIL_USER}>`,
         to: email,
-        subject: `Thank you for your order, ${name}! 💛 — Order #${orderId}`,
+        subject: `Thank you for your order, ${safeName}! 💛 — Order #${safeOrderId}`,
         html: buyerHtml,
       }),
     ]);

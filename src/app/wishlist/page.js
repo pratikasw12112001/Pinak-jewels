@@ -31,7 +31,7 @@ export default function WishlistPage() {
     <div className="container">
       <div className={styles.wishlistPage}>
         <h1 className={styles.title}>My Wishlist</h1>
-        <p className={styles.count}>{wishlistItems.length} items saved</p>
+        <p className={styles.count}>{wishlistItems.length} item{wishlistItems.length === 1 ? '' : 's'} saved</p>
         <div className={styles.grid}>
           {wishlistItems.map(item => (
             <div key={item.id} className={styles.card}>

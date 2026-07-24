@@ -1,5 +1,5 @@
 'use client';
-import { createContext, useContext, useState, useCallback } from 'react';
+import { createContext, useContext, useState, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import styles from './Toast.module.css';
 
@@ -7,9 +7,12 @@ const ToastContext = createContext();
 
 export function ToastProvider({ children }) {
   const [toasts, setToasts] = useState([]);
+  // Date.now() collides when two toasts fire in the same millisecond, which
+  // duplicates React keys and dismisses the wrong toast.
+  const nextId = useRef(0);
 
   const showToast = useCallback((message, linkText, linkHref) => {
-    const id = Date.now();
+    const id = ++nextId.current;
     setToasts(prev => [...prev, { id, message, linkText, linkHref }]);
     setTimeout(() => {
       setToasts(prev => prev.filter(t => t.id !== id));

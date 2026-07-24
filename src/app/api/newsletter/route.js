@@ -1,12 +1,41 @@
 import { NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
+import { escapeHtml, clean, isValidEmail, isHeaderSafe, rateLimit, getClientIp } from '@/lib/security';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(request) {
   try {
-    const { email } = await request.json();
-    if (!email) return NextResponse.json({ success: false, error: 'Email is required' }, { status: 400 });
+    const limit = rateLimit(`newsletter:${getClientIp(request)}`, { max: 5, windowMs: 60 * 60 * 1000 });
+    if (!limit.allowed) {
+      return NextResponse.json(
+        { success: false, error: 'Too many requests. Please try again later.' },
+        { status: 429 }
+      );
+    }
+
+    const body = await request.json();
+    const email = clean(body.email, 254);
+
+    if (!email) {
+      return NextResponse.json({ success: false, error: 'Email is required' }, { status: 400 });
+    }
+    if (!isValidEmail(email) || !isHeaderSafe(email)) {
+      return NextResponse.json(
+        { success: false, error: 'Please enter a valid email address.' },
+        { status: 400 }
+      );
+    }
+
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      console.error('Newsletter: email credentials are not configured');
+      return NextResponse.json(
+        { success: false, error: 'Unable to subscribe right now. Please try again later.' },
+        { status: 503 }
+      );
+    }
+
+    const safeEmail = escapeHtml(email);
 
     const transporter = nodemailer.createTransport({
       service: 'gmail',
@@ -25,7 +54,7 @@ export async function POST(request) {
     await transporter.sendMail({
       from: `"Pinak Jewels" <${process.env.EMAIL_USER}>`,
       to: process.env.EMAIL_TO || 'pinakjewels04@gmail.com',
-      subject: `📧 New Newsletter Subscriber — ${email}`,
+      subject: `📧 New Newsletter Subscriber — ${email}`.slice(0, 200),
       html: `
         <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 500px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden;">
           <div style="background: #0F4F3A; padding: 24px 32px; text-align: center;">
@@ -35,7 +64,7 @@ export async function POST(request) {
           <div style="padding: 28px 32px;">
             <p style="font-size: 15px; color: #374151; margin: 0 0 20px;">Someone just subscribed to the Pinak Jewels newsletter.</p>
             <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
-              <tr><td style="padding: 10px 0; color: #6b7280; width: 120px; border-bottom: 1px solid #f3f4f6;">Email</td><td style="padding: 10px 0; font-weight: 600; border-bottom: 1px solid #f3f4f6;">${email}</td></tr>
+              <tr><td style="padding: 10px 0; color: #6b7280; width: 120px; border-bottom: 1px solid #f3f4f6;">Email</td><td style="padding: 10px 0; font-weight: 600; border-bottom: 1px solid #f3f4f6;">${safeEmail}</td></tr>
               <tr><td style="padding: 10px 0; color: #6b7280;">Subscribed at</td><td style="padding: 10px 0;">${timestamp} IST</td></tr>
             </table>
           </div>
@@ -49,6 +78,9 @@ export async function POST(request) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Newsletter email error:', error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: 'Could not subscribe. Please try again.' },
+      { status: 500 }
+    );
   }
 }

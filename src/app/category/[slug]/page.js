@@ -1,6 +1,7 @@
 'use client';
 import { useState, useMemo } from 'react';
 import { useParams } from 'next/navigation';
+import Link from 'next/link';
 import ProductCard from '@/components/ProductCard';
 import { getProductsByCategory, categories } from '@/data/products';
 import styles from './page.module.css';
@@ -28,6 +29,9 @@ export default function CategoryPage() {
       <div className={styles.notFound}>
         <h1>Category not found</h1>
         <p>The category you are looking for does not exist.</p>
+        <Link href="/products" className="btn btn-primary" style={{ marginTop: '20px' }}>
+          Browse All Jewellery
+        </Link>
       </div>
     );
   }

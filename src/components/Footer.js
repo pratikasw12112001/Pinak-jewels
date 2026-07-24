@@ -7,19 +7,30 @@ function NewsletterForm({ styles }) {
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!email) return;
     setLoading(true);
+    setError('');
     try {
-      await fetch('/api/newsletter', {
+      const res = await fetch('/api/newsletter', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
       });
-    } catch (_) {}
-    setSubscribed(true);
+      const data = await res.json().catch(() => ({}));
+
+      // Only confirm the subscription if it actually succeeded.
+      if (res.ok && data.success) {
+        setSubscribed(true);
+      } else {
+        setError(data.error || 'Could not subscribe. Please try again.');
+      }
+    } catch (_) {
+      setError('Network error. Please try again.');
+    }
     setLoading(false);
   };
 
@@ -49,6 +60,11 @@ function NewsletterForm({ styles }) {
         />
         <button type="submit" className={styles.newsletterBtn} disabled={loading}>{loading ? '...' : '→'}</button>
       </form>
+      {error && (
+        <p className={styles.newsletterText} style={{ color: '#fca5a5', marginTop: '8px', fontSize: '12px' }}>
+          {error}
+        </p>
+      )}
     </div>
   );
 }

@@ -1,11 +1,10 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Script from 'next/script';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { useOrders } from '@/context/OrderContext';
-import { db } from '@/lib/firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import Link from 'next/link';
 import styles from './page.module.css';
 
@@ -51,20 +50,36 @@ export default function CheckoutPage() {
   const [processing, setProcessing] = useState(false);
   const [fetchingPincode, setFetchingPincode] = useState(false);
   const [formError, setFormError] = useState('');
+  const [razorpayReady, setRazorpayReady] = useState(false);
 
   const update = (field, val) => setForm(prev => ({ ...prev, [field]: val }));
 
-  // Auto-fill from latest previous order
-  
+  // Auto-fill from latest previous order (runs once, after orders hydrate)
   useEffect(() => {
-    if (ordersLoaded && orders.length > 0 && !usesSavedAddress && !form.address1) {
-      const latest = orders[0];
-      if (latest.customer) {
-        setForm(latest.customer);
-        setUsesSavedAddress(true);
-      }
+    if (!ordersLoaded || orders.length === 0) return;
+    const latest = orders[0];
+    if (latest?.customer?.address1) {
+      setForm(prev => (prev.address1 ? prev : latest.customer));
+      setUsesSavedAddress(prev => prev || true);
     }
-  }, [ordersLoaded, orders, form.address1]);
+  }, [ordersLoaded, orders]);
+
+  // The Razorpay script may finish loading before hydration, in which case
+  // next/script's onLoad never fires — check for the global directly too.
+  useEffect(() => {
+    if (razorpayReady) return;
+    if (typeof window !== 'undefined' && window.Razorpay) {
+      setRazorpayReady(true);
+      return;
+    }
+    const timer = setInterval(() => {
+      if (typeof window !== 'undefined' && window.Razorpay) {
+        setRazorpayReady(true);
+        clearInterval(timer);
+      }
+    }, 300);
+    return () => clearInterval(timer);
+  }, [razorpayReady]);
 
   const handlePincodeChange = async (e) => {
     const val = e.target.value.replace(/\D/g, '').slice(0, 6);
@@ -134,21 +149,40 @@ export default function CheckoutPage() {
       setFormError('Please enter a valid 6-digit PIN code.');
       return;
     }
+    if (typeof window === 'undefined' || !window.Razorpay) {
+      setFormError('Payment gateway is still loading. Please wait a moment and try again.');
+      return;
+    }
+
     setProcessing(true);
     try {
+      // Send IDs and quantities only — the server derives every rupee itself.
+      const cartPayload = cartItems.map(item => ({ id: item.id, quantity: item.quantity }));
+
       const res = await fetch('/api/payment/create-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount: total })
+        body: JSON.stringify({
+          items: cartPayload,
+          giftWrap,
+          couponCode: couponApplied ? VALID_COUPON : '',
+        }),
       });
       const data = await res.json();
 
-      if (!data.orderId) throw new Error('Failed to create payment order');
+      if (!res.ok || !data.orderId) {
+        setFormError(data.error || 'Could not start payment. Please try again.');
+        setProcessing(false);
+        return;
+      }
+
+      // The server is authoritative on price; show its figure if it differs.
+      const serverTotal = data.pricing?.total ?? total;
 
       const options = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-        amount: total * 100,
-        currency: 'INR',
+        amount: data.amount,
+        currency: data.currency || 'INR',
         name: 'Pinak Jewels',
         description: 'Jewellery Purchase',
         order_id: data.orderId,
@@ -162,121 +196,81 @@ export default function CheckoutPage() {
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_signature: response.razorpay_signature,
                 customer: form,
-                items: cartItems,
-                total
-              })
+                items: cartPayload,
+                giftWrap,
+                couponCode: couponApplied ? VALID_COUPON : '',
+              }),
             });
             const verifyData = await verifyRes.json();
-            if (verifyData.success) {
-              // Save to Firebase Firestore
-              try {
-                await addDoc(collection(db, 'orders'), {
-                  name: form.fullName,
-                  email: form.email,
-                  phone: form.phone,
-                  address: `${form.address1}${form.address2 ? ', ' + form.address2 : ''}, ${form.city}, ${form.state} — ${form.pinCode}`,
-                  product: cartItems.map(item => `${item.name} (x${item.quantity})`).join(', '),
-                  price: total,
-                  status: 'Confirmed',
-                  paymentId: response.razorpay_payment_id,
-                  orderId: verifyData.orderId || response.razorpay_order_id,
-                  timestamp: serverTimestamp(),
-                });
-              } catch (firebaseErr) {
-                console.error('Firebase save error:', firebaseErr);
-              }
-              // Send admin email notification
-              const orderAddress = `${form.address1}${form.address2 ? ', ' + form.address2 : ''}, ${form.city}, ${form.state} — ${form.pinCode}`;
-              fetch('/api/send-order-email', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  name: form.fullName,
-                  email: form.email,
-                  phone: form.phone,
-                  address: orderAddress,
-                  product: cartItems.map(item => `${item.name} (x${item.quantity})`).join(', '),
-                  price: total,
-                  paymentId: response.razorpay_payment_id,
-                  orderId: verifyData.orderId || response.razorpay_order_id,
-                }),
-              }).catch(err => console.error('Email send error:', err));
-              addOrder({
-                orderId: verifyData.orderId || response.razorpay_order_id,
-                items: cartItems,
-                total,
-                subtotal: cartTotal,
-                shipping,
-                customer: form,
-                paymentMode: 'Online (Razorpay)',
-                paymentId: response.razorpay_payment_id,
-              });
-              clearCart();
-              router.push(`/order-confirmation/${verifyData.orderId || response.razorpay_order_id}`);
+
+            if (!verifyRes.ok || !verifyData.success) {
+              // Do not show a confirmation we cannot stand behind.
+              setProcessing(false);
+              setFormError(
+                verifyData.error ||
+                  'We could not confirm your payment. If money was deducted, email pinakjewels04@gmail.com with your payment ID: ' +
+                    response.razorpay_payment_id
+              );
+              return;
             }
-          } catch (e) {
-            // Fallback: still save to Firebase Firestore
-            try {
-              await addDoc(collection(db, 'orders'), {
-                name: form.fullName,
-                email: form.email,
-                phone: form.phone,
-                address: `${form.address1}${form.address2 ? ', ' + form.address2 : ''}, ${form.city}, ${form.state} — ${form.pinCode}`,
-                product: cartItems.map(item => `${item.name} (x${item.quantity})`).join(', '),
-                price: total,
-                status: 'Confirmed',
-                paymentId: response.razorpay_payment_id,
-                orderId: response.razorpay_order_id,
-                timestamp: serverTimestamp(),
-              });
-            } catch (firebaseErr) {
-              console.error('Firebase save error:', firebaseErr);
-            }
-            // Send admin email notification (fallback)
-            const orderAddress = `${form.address1}${form.address2 ? ', ' + form.address2 : ''}, ${form.city}, ${form.state} — ${form.pinCode}`;
-            fetch('/api/send-order-email', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                name: form.fullName,
-                email: form.email,
-                phone: form.phone,
-                address: orderAddress,
-                product: cartItems.map(item => `${item.name} (x${item.quantity})`).join(', '),
-                price: total,
-                paymentId: response.razorpay_payment_id,
-                orderId: response.razorpay_order_id,
-              }),
-            }).catch(err => console.error('Email send error:', err));
+
+            // The server has already persisted the order and sent the emails.
+            // This local copy only powers the "My Orders" convenience view.
             addOrder({
-              orderId: response.razorpay_order_id,
-              items: cartItems,
-              total,
-              subtotal: cartTotal,
-              shipping,
+              orderId: verifyData.orderId,
+              items: verifyData.order?.items?.length ? verifyData.order.items : cartItems,
+              total: verifyData.order?.price ?? serverTotal,
+              subtotal: verifyData.order?.subtotal ?? cartTotal,
+              shipping: verifyData.order?.shipping ?? shipping,
               customer: form,
               paymentMode: 'Online (Razorpay)',
               paymentId: response.razorpay_payment_id,
             });
             clearCart();
-            router.push(`/order-confirmation/${response.razorpay_order_id}`);
+            router.push(`/order-confirmation/${verifyData.orderId}`);
+          } catch (err) {
+            // Network failure during verification: the payment may well have
+            // succeeded, so never claim failure and never fake a confirmation.
+            console.error('Verification request failed:', err);
+            setProcessing(false);
+            setFormError(
+              'Your payment went through but we could not confirm it automatically. ' +
+                'Please email pinakjewels04@gmail.com with payment ID: ' +
+                response.razorpay_payment_id
+            );
           }
         },
+        modal: {
+          // Re-enable the button when the customer dismisses the payment sheet.
+          ondismiss: () => setProcessing(false),
+        },
         prefill: { name: form.fullName, email: form.email, contact: form.phone },
-        theme: { color: '#0F4F3A' }
+        theme: { color: '#0F4F3A' },
       };
 
       const rzp = new window.Razorpay(options);
+      rzp.on('payment.failed', (resp) => {
+        setProcessing(false);
+        setFormError(resp?.error?.description || 'Payment failed. Please try another method.');
+      });
       rzp.open();
+      // `processing` stays true while the Razorpay modal is open; it is cleared
+      // by ondismiss, payment.failed, or a verification error above.
     } catch (err) {
-      setFormError('Payment failed. Please try again.');
+      console.error('Payment start error:', err);
+      setFormError('Payment failed to start. Please try again.');
+      setProcessing(false);
     }
-    setProcessing(false);
   };
 
   return (
     <div className={styles.checkoutPage}>
-      <script src="https://checkout.razorpay.com/v1/checkout.js" async />
+      <Script
+        src="https://checkout.razorpay.com/v1/checkout.js"
+        strategy="afterInteractive"
+        onLoad={() => setRazorpayReady(true)}
+        onError={() => setFormError('Could not load the payment gateway. Please refresh and try again.')}
+      />
       <div className="container">
         <h1 className={styles.title}>Checkout</h1>
         <div className={styles.layout}>
@@ -375,8 +369,12 @@ export default function CheckoutPage() {
                 <p className={styles.paymentInfo}>Supports UPI, Debit/Credit Cards, Net Banking & Wallets.</p>
                 {formError && <div style={{background:'#fef2f2',color:'#dc2626',padding:'12px 16px',borderRadius:'var(--radius-sm)',fontSize:'13px',marginBottom:'16px'}}>{formError}</div>}
                 <div className={styles.btnGroupCol}>
-                  <button className="btn btn-secondary" onClick={handlePayment} disabled={processing} style={{width: '100%', fontSize: '16px', padding: '16px'}}>
-                    {processing ? 'Processing...' : `Pay ₹${total.toLocaleString()}`}
+                  <button className="btn btn-secondary" onClick={handlePayment} disabled={processing || !razorpayReady} style={{width: '100%', fontSize: '16px', padding: '16px'}}>
+                    {processing
+                      ? 'Processing...'
+                      : !razorpayReady
+                        ? 'Loading payment gateway...'
+                        : `Pay ₹${total.toLocaleString()}`}
                   </button>
                   <button className="btn btn-outline" onClick={() => setStep(3)} style={{width: '100%'}}>← Back to Contact</button>
                 </div>

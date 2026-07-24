@@ -1,3 +1,4 @@
+import { notFound } from 'next/navigation';
 import { getProductBySlug } from '@/data/products';
 import ProductDetail from './ProductDetail';
 
@@ -22,6 +23,7 @@ export async function generateMetadata({ params }) {
 
 export default function ProductPage({ params }) {
   const product = getProductBySlug(params.id);
-  if (!product) return <div style={{ textAlign: 'center', padding: '120px 24px' }}><h1>Product not found</h1></div>;
+  // Return a real 404 so search engines don't index missing products.
+  if (!product) notFound();
   return <ProductDetail product={product} />;
 }

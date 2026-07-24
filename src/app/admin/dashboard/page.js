@@ -53,8 +53,10 @@ export default function AdminDashboard() {
       const res = await fetch('/api/admin/orders');
       if (res.status === 401) { router.push('/admin'); return; }
       const data = await res.json();
-      if (data.error) {
-        setFetchError('Failed to load orders. Check Firestore rules.');
+      if (!res.ok || data.error) {
+        // Surface the server's reason (e.g. admin env vars not configured)
+        // rather than always blaming Firestore rules.
+        setFetchError(data.error || 'Failed to load orders. Please try again.');
         setOrders([]);
       } else {
         setOrders(data.orders || []);
@@ -105,21 +107,28 @@ export default function AdminDashboard() {
           total: modal.order.price,
         }),
       });
+      if (res.status === 401) { router.push('/admin'); return; }
       const data = await res.json();
-      if (data.success) {
+      if (res.ok && data.success) {
         setOrders(prev => prev.map(o => o.docId === modal.order.docId
           ? { ...o, status: modal.nextStatus, trackingNumber: tracking, carrier }
           : o
         ));
+        // Only claim an email was sent when the server actually sent one.
+        const notified = data.emailSent;
         const msg = modal.nextStatus === 'Shipped'
-          ? `✅ Order marked as Shipped — customer email sent with tracking info`
+          ? (notified
+              ? '✅ Order marked as Shipped — customer email sent with tracking info'
+              : '✅ Order marked as Shipped — but the customer email could not be sent')
           : modal.nextStatus === 'Delivered'
-          ? `✅ Order marked as Delivered — customer notified`
-          : `✅ Order marked as ${modal.nextStatus}`;
+            ? (notified
+                ? '✅ Order marked as Delivered — customer notified'
+                : '✅ Order marked as Delivered — but the customer email could not be sent')
+            : `✅ Order marked as ${modal.nextStatus}`;
         showToast(msg);
         setModal(null);
       } else {
-        setUpdateError('Update failed. Please try again.');
+        setUpdateError(data.error || 'Update failed. Please try again.');
       }
     } catch {
       setUpdateError('Network error. Please try again.');

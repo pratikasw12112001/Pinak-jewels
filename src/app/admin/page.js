@@ -21,8 +21,11 @@ export default function AdminLoginPage() {
         body: JSON.stringify({ email, password }),
       });
       const data = await res.json();
-      if (data.success) {
+      if (res.ok && data.success) {
         router.push('/admin/dashboard');
+      } else if (res.status === 429 || res.status === 503) {
+        // Distinguish "locked out" / "not configured" from a wrong password.
+        setError(data.error || 'Sign-in is temporarily unavailable.');
       } else {
         setError('Invalid email or password.');
       }

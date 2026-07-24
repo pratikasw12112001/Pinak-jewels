@@ -6,18 +6,30 @@ export default function ContactPage() {
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setError('');
     try {
-      await fetch('/api/contact', {
+      const res = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
       });
-    } catch (_) {}
-    setSubmitted(true);
+      const data = await res.json().catch(() => ({}));
+
+      // Previously this always showed "message sent", even on failure — the
+      // customer believed they had reached us when nothing was delivered.
+      if (res.ok && data.success) {
+        setSubmitted(true);
+      } else {
+        setError(data.error || 'Could not send your message. Please email us directly at pinakjewels04@gmail.com.');
+      }
+    } catch (_) {
+      setError('Network error. Please check your connection, or email pinakjewels04@gmail.com.');
+    }
     setLoading(false);
   };
 
@@ -61,6 +73,11 @@ export default function ContactPage() {
           ) : (
             <form className={styles.form} onSubmit={handleSubmit}>
               <h3>Send a Message</h3>
+              {error && (
+                <div style={{background:'#fef2f2',color:'#dc2626',padding:'12px 16px',borderRadius:'8px',fontSize:'13px',marginBottom:'16px',lineHeight:1.6}}>
+                  {error}
+                </div>
+              )}
               <div className={styles.field}>
                 <label htmlFor="contact-name">Your Name</label>
                 <input id="contact-name" type="text" placeholder="Enter your name" value={form.name} onChange={e => update('name', e.target.value)} required />
