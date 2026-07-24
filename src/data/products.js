@@ -816,14 +816,13 @@ export const products = [
     category: "Rings",
     categorySlug: "rings",
     material: "Brass",
-    price: 11,
+    price: 1000,
     image: "/products/product-55.jpg",
     description: "Breathtaking in its simplicity, the Emerald Cut Diamond Engagement Ring features a bold rectangular emerald-cut stone elevated in a classic four-prong gold-toned setting. The slender band is adorned with a delicate row of sparkling accent stones that cascade along each side, adding brilliance and depth to every angle. Crafted with precision and care, this ring is a timeless declaration of love — elegant, enduring, and utterly unforgettable.",
     features: ["Anti Tarnish", "Waterproof", "Premium Finish", "Lightweight"],
     stock: 50,
-    isNew: false,
-    isBestseller: false,
-    freeShipping: true
+    isNew: true,
+    isBestseller: false
   }
 ];
 
